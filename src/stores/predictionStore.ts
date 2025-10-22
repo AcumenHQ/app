@@ -389,7 +389,7 @@ export const usePredictionStore = create<PredictionState>()(
             filterPredictions: () => {
                 const { predictions, searchQuery, selectedCategory, sortBy } = get()
 
-                let filtered = predictions.filter(prediction => {
+                const filtered = predictions.filter(prediction => {
                     const matchesSearch = prediction.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                         prediction.description.toLowerCase().includes(searchQuery.toLowerCase())
                     const matchesCategory = selectedCategory === 'all' || prediction.category === selectedCategory

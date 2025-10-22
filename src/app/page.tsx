@@ -157,7 +157,7 @@ export default function Home() {
               <span className="text-base text-muted-foreground">Sort by:</span>
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
+                onChange={(e) => setSortBy(e.target.value as 'newest' | 'volume' | 'ending-soon' | 'trending')}
                 className="bg-background border border-input rounded-lg px-4 py-2 text-base text-foreground focus:outline-none focus:ring-2 focus:ring-ring min-w-[140px]"
               >
                 <option value="newest">Newest</option>

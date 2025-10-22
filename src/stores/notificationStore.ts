@@ -10,7 +10,7 @@ export interface Notification {
     isRead: boolean
     isImportant: boolean
     actionUrl?: string
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
 }
 
 export interface PriceAlert {

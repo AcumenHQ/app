@@ -1,4 +1,4 @@
-import { Prediction } from '@/stores/predictionStore';
+import { Prediction, PredictionOption } from '@/stores/predictionStore';
 
 // This will be replaced with API calls when backend is ready
 export const generateDemoPredictions = (): Prediction[] => {
@@ -308,7 +308,7 @@ export const generateDemoPredictions = (): Prediction[] => {
 
     // Determine card type based on prediction content
     let cardType: 'simple' | 'multiple-options' | 'date-based' | 'range-based' = 'simple';
-    let options: any[] = [];
+    let options: PredictionOption[] = [];
     let overallChance: number | undefined = undefined;
 
     // Check for specific patterns to determine card type
