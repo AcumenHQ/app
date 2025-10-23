@@ -90,6 +90,7 @@ export const config = wagmiAdapter.wagmiConfig
 
 const appKitInstance = createAppKit({
     adapters: [wagmiAdapter, solanaAdapter],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     networks: networks as any,
     projectId,
     metadata,
