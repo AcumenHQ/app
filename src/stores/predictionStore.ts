@@ -1,86 +1,12 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-
-export interface PredictionOption {
-    id: string
-    label: string
-    percentage: number
-    yesPrice: number
-    noPrice: number
-    volume: number
-}
-
-export interface Prediction {
-    id: string
-    title: string
-    description: string
-    category: string
-    subcategory?: string
-    endDate: Date
-    outcome: 'yes' | 'no' | 'pending' | 'cancelled'
-
-    // Card type determines how the card is rendered
-    cardType: 'simple' | 'multiple-options' | 'date-based' | 'range-based'
-
-    // For simple cards (single Yes/No)
-    yesPrice?: number
-    noPrice?: number
-
-    // For cards with multiple options
-    options?: PredictionOption[]
-
-    // Overall chance for simple cards
-    overallChance?: number
-
-    totalVolume: number
-    liquidity: number
-    creator: string
-    createdAt: Date
-    tags: string[]
-    imageUrl?: string
-    resolutionSource?: string
-    isResolved: boolean
-    resolutionDate?: Date
-    marketCap: number
-    volume24h: number
-    priceChange24h: number
-    participants: number
-    isFeatured: boolean
-    isVerified: boolean
-    difficulty: 'easy' | 'medium' | 'hard'
-}
-
-export interface UserPosition {
-    predictionId: string
-    side: 'yes' | 'no'
-    amount: number
-    averagePrice: number
-    pnl: number
-    entryDate: Date
-    isActive: boolean
-    potentialPnl: number
-}
-
-export interface PredictionFilter {
-    category: string
-    subcategory?: string
-    difficulty: string
-    timeRange: 'all' | '24h' | '7d' | '30d' | '90d'
-    priceRange: { min: number; max: number }
-    volumeRange: { min: number; max: number }
-    isVerified: boolean | null
-    isResolved: boolean | null
-}
-
-export interface MarketStats {
-    totalPredictions: number
-    totalVolume: number
-    activePredictions: number
-    resolvedPredictions: number
-    averageVolume: number
-    topCategories: { category: string; count: number; volume: number }[]
-    trendingTags: { tag: string; count: number }[]
-}
+import type {
+    Prediction,
+    PredictionOption,
+    UserPosition,
+    PredictionFilter,
+    MarketStats
+} from '@/types/types'
 
 interface PredictionState {
     // Predictions data

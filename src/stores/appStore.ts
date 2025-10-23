@@ -1,28 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-
-interface AppState {
-    // UI State
-    isMobileMenuOpen: boolean
-    isResourcesOpen: boolean
-    isCommunityOpen: boolean
-    isScrolled: boolean
-
-    // Theme
-    theme: 'light' | 'dark'
-
-    // Loading states
-    isLoading: boolean
-
-    // Actions
-    setMobileMenuOpen: (open: boolean) => void
-    setResourcesOpen: (open: boolean) => void
-    setCommunityOpen: (open: boolean) => void
-    setScrolled: (scrolled: boolean) => void
-    setTheme: (theme: 'light' | 'dark') => void
-    setLoading: (loading: boolean) => void
-    toggleTheme: () => void
-}
+import type { AppState } from '@/types/types'
 
 export const useAppStore = create<AppState>()(
     persist(

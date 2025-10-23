@@ -1,4 +1,4 @@
-import { Prediction, PredictionOption } from '@/stores/predictionStore';
+import type { Prediction, PredictionOption } from '@/types/types';
 
 // This will be replaced with API calls when backend is ready
 export const generateDemoPredictions = (): Prediction[] => {

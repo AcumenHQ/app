@@ -1,27 +1,10 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-
-export interface Notification {
-    id: string
-    type: 'bet' | 'prediction' | 'price' | 'social' | 'system' | 'achievement'
-    title: string
-    message: string
-    timestamp: Date
-    isRead: boolean
-    isImportant: boolean
-    actionUrl?: string
-    metadata?: Record<string, unknown>
-}
-
-export interface PriceAlert {
-    id: string
-    predictionId: string
-    condition: 'above' | 'below' | 'change'
-    targetPrice: number
-    isActive: boolean
-    createdAt: Date
-    triggeredAt?: Date
-}
+import type {
+    Notification,
+    PriceAlert,
+    NotificationStoreState
+} from '@/types/types'
 
 interface NotificationState {
     // Notifications

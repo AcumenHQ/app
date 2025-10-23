@@ -1,9 +1,4 @@
-interface CircularProgressProps {
-    percentage: number;
-    size?: number;
-    strokeWidth?: number;
-    className?: string;
-}
+import type { CircularProgressProps } from '@/types/types';
 
 export const CircularProgress = ({
     percentage,

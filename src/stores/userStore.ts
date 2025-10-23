@@ -1,39 +1,11 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-
-export interface UserProfile {
-    id: string
-    address: string
-    username: string
-    displayName: string
-    bio: string
-    avatar: string
-    banner: string
-    location: string
-    website: string
-    twitter: string
-    discord: string
-    joinedDate: Date
-    isVerified: boolean
-    reputation: number
-    level: number
-    xp: number
-}
-
-export interface UserStats {
-    totalPredictions: number
-    totalBets: number
-    totalWinnings: number
-    totalLosses: number
-    winRate: number
-    averageBetSize: number
-    biggestWin: number
-    biggestLoss: number
-    streak: number
-    longestStreak: number
-    rank: number
-    percentile: number
-}
+import type {
+    UserProfile,
+    UserStats,
+    UserAchievement,
+    UserStoreState
+} from '@/types/types'
 
 export interface UserPreferences {
     theme: 'light' | 'dark' | 'auto'
@@ -220,6 +192,7 @@ export const useUserStore = create<UserState>()(
                         biggestLoss: 0,
                         streak: 0,
                         longestStreak: 0,
+                        totalVolume: 0,
                         rank: 0,
                         percentile: 0,
                     }
