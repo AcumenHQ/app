@@ -5,8 +5,11 @@ import { usePredictionStore } from '@/stores/predictionStore';
 import { PredictionCard } from '@/components/predictions/PredictionCard';
 import { ConnectButton } from '@/components/appkit-button';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { useTheme } from 'next-themes';
+import Image from 'next/image';
 
 export default function Home() {
+  const { theme, resolvedTheme } = useTheme();
   const {
     predictions,
     searchQuery,
@@ -77,11 +80,14 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary rounded flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">A</span>
-              </div>
-              <span className="text-xl font-bold text-foreground">Acumen</span>
+            <div className="flex items-center">
+              <Image
+                src={resolvedTheme === 'dark' ? '/Artboard 9.PNG' : '/Artboard 10.PNG'}
+                alt="Acumen Logo"
+                width={32}
+                height={32}
+                className="w-8 h-8"
+              />
             </div>
 
             {/* Search Bar */}

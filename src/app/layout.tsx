@@ -12,7 +12,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Acumen - Prediction Marketplace",
+  title: "Acumen - Solana Prediction & Education Platform",
   description: "Trade on the outcomes of future events. Connect your wallet to start predicting and earning.",
   keywords: "prediction, marketplace, trading, events, blockchain, Web3",
 };
