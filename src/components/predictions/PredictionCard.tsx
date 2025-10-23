@@ -6,6 +6,7 @@ import { usePredictionStore } from '@/stores/predictionStore';
 import { useWalletIntegration } from '@/hooks/useWalletIntegration';
 import { CircularProgress } from '@/components/CircularProgress';
 import { TradingModal } from '@/components/TradingModal';
+import { WalletConnectModal } from '@/components/WalletConnectModal';
 
 
 export const PredictionCard = ({ prediction }: PredictionCardProps) => {
@@ -15,6 +16,7 @@ export const PredictionCard = ({ prediction }: PredictionCardProps) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedOutcome, setSelectedOutcome] = useState<'yes' | 'no' | null>(null);
     const [modalAction, setModalAction] = useState<'buy' | 'sell'>('buy');
+    const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
 
     const isWatched = watchlist.includes(prediction.id);
     const timeLeft = new Date(prediction.endDate).getTime() - Date.now();
@@ -22,7 +24,7 @@ export const PredictionCard = ({ prediction }: PredictionCardProps) => {
 
     const handleBet = async (side: 'yes' | 'no', optionId?: string) => {
         if (!isConnected) {
-            alert('Please connect your wallet to place bets');
+            setIsWalletModalOpen(true);
             return;
         }
 
@@ -62,20 +64,20 @@ export const PredictionCard = ({ prediction }: PredictionCardProps) => {
 
 
     const renderSimpleCard = () => (
-        <div className="mt-4">
+        <div className="mt-3 sm:mt-4">
             {/* Yes/No Buttons - Polymarket style, positioned right below title */}
             <div className="flex space-x-2">
                 <button
                     onClick={() => handleBet('yes')}
                     disabled={isPlacingBet}
-                    className="flex-1 bg-green-500 hover:bg-green-600 disabled:bg-gray-500 text-white text-sm px-3 py-2 rounded font-medium transition-colors"
+                    className="flex-1 bg-green-500 hover:bg-green-600 disabled:bg-gray-500 text-white text-xs sm:text-sm px-2 sm:px-3 py-2 rounded font-medium transition-colors"
                 >
                     {isPlacingBet ? '...' : 'Yes'}
                 </button>
                 <button
                     onClick={() => handleBet('no')}
                     disabled={isPlacingBet}
-                    className="flex-1 bg-red-500 hover:bg-red-600 disabled:bg-gray-500 text-white text-sm px-3 py-2 rounded font-medium transition-colors"
+                    className="flex-1 bg-red-500 hover:bg-red-600 disabled:bg-gray-500 text-white text-xs sm:text-sm px-2 sm:px-3 py-2 rounded font-medium transition-colors"
                 >
                     {isPlacingBet ? '...' : 'No'}
                 </button>
@@ -84,28 +86,28 @@ export const PredictionCard = ({ prediction }: PredictionCardProps) => {
     );
 
     const renderMultipleOptionsCard = () => (
-        <div className="mb-4">
+        <div className="mb-3 sm:mb-4">
             {/* Scrollable container with fixed height - hidden scrollbar */}
-            <div className="max-h-12 overflow-y-auto space-y-1 scrollbar-hide">
+            <div className="max-h-10 sm:max-h-12 overflow-y-auto space-y-1 scrollbar-hide">
                 {prediction.options?.map((option) => (
-                    <div key={option.id} className="space-y-2">
+                    <div key={option.id} className="space-y-1 sm:space-y-2">
                         {/* Option label, percentage, and buttons - Polymarket style */}
                         <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-card-foreground">{option.label}</span>
-                            <div className="flex items-center space-x-2">
-                                <span className="text-sm font-bold text-card-foreground">{option.percentage}%</span>
+                            <span className="text-xs sm:text-sm font-medium text-card-foreground truncate flex-1 mr-2">{option.label}</span>
+                            <div className="flex items-center space-x-1 sm:space-x-2">
+                                <span className="text-xs sm:text-sm font-bold text-card-foreground">{option.percentage}%</span>
                                 <div className="flex space-x-1">
                                     <button
                                         onClick={() => handleBet('yes', option.id)}
                                         disabled={isPlacingBet}
-                                        className="bg-green-500 hover:bg-green-600 disabled:bg-gray-500 text-white text-xs px-2 py-1 rounded font-medium transition-colors"
+                                        className="bg-green-500 hover:bg-green-600 disabled:bg-gray-500 text-white text-xs px-1.5 sm:px-2 py-1 rounded font-medium transition-colors"
                                     >
                                         {isPlacingBet ? '...' : 'Yes'}
                                     </button>
                                     <button
                                         onClick={() => handleBet('no', option.id)}
                                         disabled={isPlacingBet}
-                                        className="bg-red-500 hover:bg-red-600 disabled:bg-gray-500 text-white text-xs px-2 py-1 rounded font-medium transition-colors"
+                                        className="bg-red-500 hover:bg-red-600 disabled:bg-gray-500 text-white text-xs px-1.5 sm:px-2 py-1 rounded font-medium transition-colors"
                                     >
                                         {isPlacingBet ? '...' : 'No'}
                                     </button>
@@ -133,29 +135,29 @@ export const PredictionCard = ({ prediction }: PredictionCardProps) => {
 
     return (
         <>
-            <div className="bg-card border border-border rounded-lg p-4 hover:border-border/80 transition-all duration-200 h-48 flex flex-col">
+            <div className="bg-card border border-border rounded-lg p-3 sm:p-4 hover:border-border/80 transition-all duration-200 min-h-[200px] sm:min-h-[220px] flex flex-col">
                 {/* Header with icon, title and star */}
-                <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center space-x-3">
+                <div className="flex items-start justify-between mb-3 sm:mb-4">
+                    <div className="flex items-start space-x-2 sm:space-x-3 flex-1 min-w-0">
                         {/* Category Icon */}
-                        <div className="w-10 h-10 flex items-center justify-center">
-                            {prediction.category === 'token' && <span className="text-yellow-400 text-lg">₿</span>}
-                            {prediction.category === 'politics' && <span className="text-blue-400 text-lg">🏛️</span>}
-                            {prediction.category === 'entertainment' && <span className="text-pink-400 text-lg">🎬</span>}
-                            {prediction.category === 'sports' && <span className="text-green-400 text-lg">⚽</span>}
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center flex-shrink-0">
+                            {prediction.category === 'token' && <span className="text-yellow-400 text-sm sm:text-lg">₿</span>}
+                            {prediction.category === 'politics' && <span className="text-blue-400 text-sm sm:text-lg">🏛️</span>}
+                            {prediction.category === 'entertainment' && <span className="text-pink-400 text-sm sm:text-lg">🎬</span>}
+                            {prediction.category === 'sports' && <span className="text-green-400 text-sm sm:text-lg">⚽</span>}
                         </div>
-                        <div>
-                            <h3 className="text-sm font-medium text-card-foreground leading-tight">{prediction.title}</h3>
+                        <div className="flex-1 min-w-0">
+                            <h3 className="text-xs sm:text-sm font-medium text-card-foreground leading-tight line-clamp-2">{prediction.title}</h3>
                         </div>
                     </div>
 
                     {/* Star button for watchlist */}
                     <button
                         onClick={toggleWatchlist}
-                        className={`p-1 rounded transition-colors ${isWatched ? 'text-yellow-400' : 'text-muted-foreground hover:text-yellow-400'
+                        className={`p-1 rounded transition-colors flex-shrink-0 ${isWatched ? 'text-yellow-400' : 'text-muted-foreground hover:text-yellow-400'
                             }`}
                     >
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                         </svg>
                     </button>
@@ -199,6 +201,13 @@ export const PredictionCard = ({ prediction }: PredictionCardProps) => {
                 prediction={prediction}
                 selectedOutcome={selectedOutcome}
                 action={modalAction}
+            />
+
+            <WalletConnectModal
+                isOpen={isWalletModalOpen}
+                onClose={() => setIsWalletModalOpen(false)}
+                title="Connect Your Wallet"
+                message="Please connect your wallet to place bets and start trading on predictions."
             />
         </>
     );

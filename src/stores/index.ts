@@ -6,4 +6,4 @@ export { useUserStore } from './userStore'
 export { useNotificationStore } from './notificationStore'
 
 // Export types
-// export type { Prediction, UserPosition, PredictionFilter, MarketStats, UserProfile, UserStats, Notification, PriceAlert } from '@/types/types'
+export type { Prediction, UserPosition, PredictionFilter, MarketStats, UserProfile, UserStats, Notification, PriceAlert } from '@/types/types'

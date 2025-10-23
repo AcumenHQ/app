@@ -1,4 +1,4 @@
-export function ConnectButton() {
+export function ConnectButton({ className }: { className?: string }) {
     return <appkit-button />
 }
 

@@ -1,5 +1,30 @@
 @import 'tailwindcss';
 
+/* Custom responsive utilities */
+@layer utilities {
+   .scrollbar-hide {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+   }
+   .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+   }
+
+   .line-clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+   }
+
+   .line-clamp-3 {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+   }
+}
+
 :root {
    /* Light theme (default) */
    --background: #ffffff;
@@ -8,8 +33,8 @@
    --card-foreground: #120f25;
    --popover: #ffffff;
    --popover-foreground: #120f25;
-   --primary: #ffffff;
-   --primary-foreground: #120f25;
+   --primary: #6f46be;
+   --primary-foreground: #ffffff;
    --secondary: #f1f5f9;
    --secondary-foreground: #120f25;
    --muted: #f1f5f9;
