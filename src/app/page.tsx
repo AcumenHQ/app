@@ -80,13 +80,6 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16">
             {/* Logo */}
-<<<<<<< HEAD
-            <div className="flex items-center space-x-2">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 bg-primary rounded flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-xs sm:text-sm">A</span>
-              </div>
-              <span className="text-lg sm:text-xl font-bold text-foreground">Acumen</span>
-=======
             <div className="flex items-center">
               <Image
                 src={resolvedTheme === 'dark' ? '/Artboard 9.PNG' : '/Artboard 10.PNG'}
@@ -95,7 +88,6 @@ export default function Home() {
                 height={32}
                 className="w-8 h-8"
               />
->>>>>>> c06f4eed3f56276dd0b69a35432e27127b4b4ffd
             </div>
 
 
