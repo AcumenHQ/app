@@ -96,8 +96,8 @@ export default function Home() {
               <button className="hidden sm:block text-sm text-muted-foreground hover:text-foreground transition-colors">
                 How it works
               </button>
-              <ThemeToggle />
               <ConnectButton />
+              <ThemeToggle />
             </div>
           </div>
         </div>

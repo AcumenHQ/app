@@ -87,11 +87,9 @@ export const PredictionCard = ({ prediction }: PredictionCardProps) => {
 
     const renderMultipleOptionsCard = () => (
         <div className="mb-3 sm:mb-4">
-            {/* Scrollable container with fixed height - hidden scrollbar */}
             <div className="max-h-10 sm:max-h-12 overflow-y-auto space-y-1 scrollbar-hide">
                 {prediction.options?.map((option) => (
                     <div key={option.id} className="space-y-1 sm:space-y-2">
-                        {/* Option label, percentage, and buttons - Polymarket style */}
                         <div className="flex items-center justify-between">
                             <span className="text-xs sm:text-sm font-medium text-card-foreground truncate flex-1 mr-2">{option.label}</span>
                             <div className="flex items-center space-x-1 sm:space-x-2">
