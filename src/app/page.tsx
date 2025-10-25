@@ -7,6 +7,7 @@ import { ConnectButton } from '@/components/appkit-button';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useTheme } from 'next-themes';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function Home() {
   const { theme, resolvedTheme } = useTheme();
@@ -79,16 +80,18 @@ export default function Home() {
       <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16">
-            {/* Logo */}
-            <div className="flex items-center">
-              <Image
-                src={resolvedTheme === 'dark' ? '/Artboard 9.PNG' : '/Artboard 10.PNG'}
-                alt="Acumen Logo"
-                width={32}
-                height={32}
-                className="w-8 h-8"
-              />
-            </div>
+            {/* Logo add link to the logo */}
+            <Link href="/">
+              <div className="flex items-center">
+                <Image
+                  src={resolvedTheme === 'dark' ? '/Artboard 9.PNG' : '/Artboard 10.PNG'}
+                  alt="Acumen Logo"
+                  width={32}
+                  height={32}
+                  className="w-8 h-8"
+                />
+              </div>
+            </Link>
 
 
             {/* Connect Wallet Button */}
@@ -222,7 +225,7 @@ export default function Home() {
             <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-primary"></div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {filteredPredictions.map((prediction) => (
               <PredictionCard
                 key={prediction.id}

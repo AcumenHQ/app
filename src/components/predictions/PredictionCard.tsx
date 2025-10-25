@@ -65,7 +65,6 @@ export const PredictionCard = ({ prediction }: PredictionCardProps) => {
 
     const renderSimpleCard = () => (
         <div className="mt-3 sm:mt-4">
-            {/* Yes/No Buttons - Polymarket style, positioned right below title */}
             <div className="flex space-x-2">
                 <button
                     onClick={() => handleBet('yes')}
@@ -166,7 +165,6 @@ export const PredictionCard = ({ prediction }: PredictionCardProps) => {
                     {renderCardContent()}
                 </div>
 
-                {/* Footer - Polymarket style */}
                 <div className="flex items-center justify-between mt-auto pt-3 border-t border-border">
                     <div className="flex items-center space-x-2">
                         <span className="text-xs text-muted-foreground">{formatVolume(prediction.totalVolume)} Vol.</span>
