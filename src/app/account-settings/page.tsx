@@ -3,12 +3,18 @@
 import { useState, useEffect } from "react";
 import { useUserStore } from "@/stores/userStore";
 import { useAccount } from "wagmi";
+import { useAppKitAccount } from "@reown/appkit/react";
 import { CopyAddress } from "@/components/CopyAddress";
+import Image from "next/image";
 import Link from "next/link";
 
 export default function AccountSettingsPage() {
   const { profile, isLoadingProfile, updateProfile } = useUserStore();
-  const { address, isConnected } = useAccount();
+  const { address: ethAddress, isConnected: ethConnected } = useAccount();
+  const { address: appKitAddress, isConnected: appKitConnected } =
+    useAppKitAccount();
+  const address = ethAddress || appKitAddress;
+  const isConnected = ethConnected || appKitConnected;
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [activeSection, setActiveSection] = useState<

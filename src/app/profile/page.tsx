@@ -4,13 +4,18 @@ import { useState, useEffect } from "react";
 import { useUserStore } from "@/stores/userStore";
 import { usePredictionStore } from "@/stores/predictionStore";
 import { useAccount } from "wagmi";
+import { useAppKitAccount } from "@reown/appkit/react";
 import Image from "next/image";
 import Link from "next/link";
 
 export default function ProfilePage() {
   const { profile, stats, isLoadingProfile, isLoadingStats } = useUserStore();
   const { userPositions, getUserPositions } = usePredictionStore();
-  const { address, isConnected } = useAccount();
+  const { address: ethAddress, isConnected: ethConnected } = useAccount();
+  const { address: appKitAddress, isConnected: appKitConnected } =
+    useAppKitAccount();
+  const address = ethAddress || appKitAddress;
+  const isConnected = ethConnected || appKitConnected;
   const [activeTab, setActiveTab] = useState<
     "overview" | "positions" | "history"
   >("overview");

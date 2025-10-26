@@ -6,6 +6,7 @@ import { ConnectButton } from "@/components/appkit-button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { HamburgerMenu } from "@/components/HamburgerMenu";
 import { useAccount } from "wagmi";
+import { useAppKitAccount } from "@reown/appkit/react";
 import { useTheme } from "next-themes";
 import { usePathname } from "next/navigation";
 import { useWalletSync } from "@/hooks/useWalletSync";
@@ -16,7 +17,9 @@ export function Header() {
   const [isScrollingUp, setIsScrollingUp] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
   const { resolvedTheme } = useTheme();
-  const { isConnected } = useAccount();
+  const { isConnected: ethConnected } = useAccount();
+  const { isConnected: appKitConnected } = useAppKitAccount();
+  const isConnected = ethConnected || appKitConnected;
   const pathname = usePathname();
 
   // Initialize wallet-store synchronization
