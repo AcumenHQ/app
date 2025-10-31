@@ -57,7 +57,9 @@ export async function fetchWalletBalance(
 
         if (tokens.USDC) {
             try {
-                const usdcContract = new ethers.Contract(tokens.USDC, ERC20_BALANCE_ABI, provider);
+                // Normalize token address to proper checksum format
+                const normalizedUsdcAddress = ethers.getAddress(tokens.USDC);
+                const usdcContract = new ethers.Contract(normalizedUsdcAddress, ERC20_BALANCE_ABI, provider);
                 const usdcRawBalance = await usdcContract.balanceOf(address);
                 const decimals = await usdcContract.decimals();
                 usdcBalance = parseFloat(ethers.formatUnits(usdcRawBalance, decimals));
@@ -68,7 +70,9 @@ export async function fetchWalletBalance(
 
         if (tokens.USDT) {
             try {
-                const usdtContract = new ethers.Contract(tokens.USDT, ERC20_BALANCE_ABI, provider);
+                // Normalize token address to proper checksum format
+                const normalizedUsdtAddress = ethers.getAddress(tokens.USDT);
+                const usdtContract = new ethers.Contract(normalizedUsdtAddress, ERC20_BALANCE_ABI, provider);
                 const usdtRawBalance = await usdtContract.balanceOf(address);
                 const decimals = await usdtContract.decimals();
                 usdtBalance = parseFloat(ethers.formatUnits(usdtRawBalance, decimals));

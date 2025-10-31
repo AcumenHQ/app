@@ -131,11 +131,12 @@ export const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
                 console.warn('Chain switch error (may already be on correct chain):', switchError);
             }
 
-            // Get token contract address
-            const tokenAddress = TOKEN_ADDRESSES[numericChainId as keyof typeof TOKEN_ADDRESSES]?.[selectedToken.toUpperCase() as 'USDC' | 'USDT'];
-            if (!tokenAddress) {
+            // Get token contract address and normalize to proper checksum format
+            const rawTokenAddress = TOKEN_ADDRESSES[numericChainId as keyof typeof TOKEN_ADDRESSES]?.[selectedToken.toUpperCase() as 'USDC' | 'USDT'];
+            if (!rawTokenAddress) {
                 throw new Error(`Token ${selectedToken} not supported on chain ${numericChainId}`);
             }
+            const tokenAddress = ethers.getAddress(rawTokenAddress);
 
             // Get token decimals from contract
             const rpcUrl = getWebSocketRpcUrl(numericChainId);

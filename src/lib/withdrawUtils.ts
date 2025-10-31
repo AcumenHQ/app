@@ -14,12 +14,14 @@ export async function sendTokenTransfer(
     amount: string,
     chainId: string
 ): Promise<string> {
-    const tokenAddress = TOKEN_ADDRESSES[chainId as keyof typeof TOKEN_ADDRESSES]?.[tokenSymbol];
+    const rawTokenAddress = TOKEN_ADDRESSES[chainId as keyof typeof TOKEN_ADDRESSES]?.[tokenSymbol];
 
-    if (!tokenAddress) {
+    if (!rawTokenAddress) {
         throw new Error(`Token ${tokenSymbol} not supported on chain ${chainId}`);
     }
 
+    // Normalize token address to proper checksum format
+    const tokenAddress = ethers.getAddress(rawTokenAddress);
     const tokenContract = new ethers.Contract(tokenAddress, ERC20_TRANSFER_ABI, signer);
 
     // Get token decimals
