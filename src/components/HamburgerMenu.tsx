@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useDisconnect, useAccount } from "wagmi";
+import { usePrivy } from "@privy-io/react-auth";
 import { useUserStore } from "@/stores/userStore";
 import { CopyAddress } from "@/components/CopyAddress";
 import Link from "next/link";
@@ -13,9 +13,18 @@ interface HamburgerMenuProps {
 
 export function HamburgerMenu({ isConnected }: HamburgerMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const { disconnect } = useDisconnect();
-  const { address } = useAccount();
-  const { profile } = useUserStore();
+  const { authenticated, user, logout } = usePrivy();
+  const { profile, loadUserData } = useUserStore();
+
+  // Load user data when authenticated
+  useEffect(() => {
+    if (authenticated && user?.id && (!profile || profile.id !== user.id)) {
+      loadUserData(user.id);
+    }
+  }, [authenticated, user?.id, profile, loadUserData]);
+
+  // Use generated deposit address from Privy, not connected wallet
+  const depositAddress = profile?.virtualAddress;
   const router = useRouter();
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -38,11 +47,11 @@ export function HamburgerMenu({ isConnected }: HamburgerMenuProps) {
 
   const handleLogout = async () => {
     try {
-      disconnect();
+      logout();
       setIsOpen(false);
       router.push("/");
     } catch (error) {
-      console.error("Failed to disconnect wallet:", error);
+      console.error("Failed to logout:", error);
     }
   };
 
@@ -50,7 +59,7 @@ export function HamburgerMenu({ isConnected }: HamburgerMenuProps) {
     setIsOpen(false);
   };
 
-  if (!isConnected) {
+  if (!authenticated && !isConnected) {
     return null;
   }
 
@@ -64,19 +73,16 @@ export function HamburgerMenu({ isConnected }: HamburgerMenuProps) {
       >
         <div className="w-5 h-5 flex flex-col justify-between">
           <span
-            className={`block h-0.5 bg-current transition-all duration-200 ${
-              isOpen ? "rotate-45 translate-y-2" : ""
-            }`}
+            className={`block h-0.5 bg-current transition-all duration-200 ${isOpen ? "rotate-45 translate-y-2" : ""
+              }`}
           />
           <span
-            className={`block h-0.5 bg-current transition-all duration-200 ${
-              isOpen ? "opacity-0" : ""
-            }`}
+            className={`block h-0.5 bg-current transition-all duration-200 ${isOpen ? "opacity-0" : ""
+              }`}
           />
           <span
-            className={`block h-0.5 bg-current transition-all duration-200 ${
-              isOpen ? "-rotate-45 -translate-y-2" : ""
-            }`}
+            className={`block h-0.5 bg-current transition-all duration-200 ${isOpen ? "-rotate-45 -translate-y-2" : ""
+              }`}
           />
         </div>
       </button>
@@ -100,14 +106,14 @@ export function HamburgerMenu({ isConnected }: HamburgerMenuProps) {
               <p className="text-xs text-muted-foreground mb-2">
                 {profile?.username
                   ? `@${profile.username}`
-                  : address
-                    ? `@user_${address.slice(2, 8)}`
-                    : "Connected Wallet"}
+                  : depositAddress
+                    ? `@user_${depositAddress.replace(/^0x/, '').slice(0, 6)}`
+                    : "Wallet"}
               </p>
-              {address && (
+              {depositAddress && (
                 <div className="mt-2">
                   <CopyAddress
-                    address={address}
+                    address={depositAddress}
                     showFullAddress={false}
                     className="text-xs text-muted-foreground"
                     iconSize="sm"

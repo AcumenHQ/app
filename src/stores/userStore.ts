@@ -7,6 +7,29 @@ import type {
     UserStoreState
 } from '@/types/types'
 
+// Deterministically derive a pseudo wallet address from a connected account or email
+// This is NOT a blockchain address; it's an app-scoped identifier for display only
+function generateVirtualAddressFor(input: string): string {
+    // djb2 hash as a simple deterministic seed
+    let hash = 5381
+    for (let i = 0; i < input.length; i++) {
+        hash = ((hash << 5) + hash) + input.charCodeAt(i)
+        hash = hash >>> 0
+    }
+    // Expand to 20 bytes (40 hex chars)
+    const bytes: number[] = []
+    let seed = hash
+    for (let i = 0; i < 20; i++) {
+        // xorshift32
+        seed ^= seed << 13
+        seed ^= seed >>> 17
+        seed ^= seed << 5
+        bytes.push(seed & 0xff)
+    }
+    const hex = bytes.map(b => b.toString(16).padStart(2, '0')).join('')
+    return `0x${hex}`
+}
+
 export interface UserPreferences {
     theme: 'light' | 'dark' | 'auto'
     language: string
@@ -64,7 +87,7 @@ interface UserState {
     // User actions
     updateProfile: (updates: Partial<UserProfile>) => Promise<void>
     updatePreferences: (updates: Partial<UserPreferences>) => Promise<void>
-    loadUserData: (address: string) => Promise<void>
+    loadUserData: (userId: string) => Promise<void>
     resetUser: () => void
 }
 
@@ -124,9 +147,6 @@ export const useUserStore = create<UserState>()(
             updateProfile: async (updates) => {
                 set({ isUpdatingProfile: true, error: null })
                 try {
-                    // This will be implemented with API calls
-                    console.log('Updating profile:', updates)
-
                     set((state) => ({
                         profile: state.profile ? { ...state.profile, ...updates } : null,
                         isUpdatingProfile: false,
@@ -142,9 +162,6 @@ export const useUserStore = create<UserState>()(
             updatePreferences: async (updates) => {
                 set({ error: null })
                 try {
-                    // This will be implemented with API calls
-                    console.log('Updating preferences:', updates)
-
                     set((state) => ({
                         preferences: { ...state.preferences, ...updates }
                     }))
@@ -155,17 +172,48 @@ export const useUserStore = create<UserState>()(
                 }
             },
 
-            loadUserData: async (address) => {
+            loadUserData: async (userId) => {
                 set({ isLoadingProfile: true, isLoadingStats: true, error: null })
                 try {
-                    // This will be implemented with API calls
-                    console.log('Loading user data for:', address)
+                    let depositAddresses: Record<string, { usdc?: string; usdt?: string }> | undefined
+                    let defaultEvmAddress: string | undefined
+                    try {
+                        const res = await fetch(`/api/session`, {
+                            method: 'POST',
+                            headers: { 'content-type': 'application/json' },
+                            body: JSON.stringify({ userId })
+                        })
+                        if (res.ok) {
+                            const data = await res.json()
+                            depositAddresses = data?.depositAddresses
+                            defaultEvmAddress = data?.defaultEvmAddress
+                        } else {
+                            const errorText = await res.text()
+                            console.error('Failed to fetch deposit addresses:', res.status, errorText)
+                        }
+                    } catch (err) {
+                        console.error('Error fetching deposit addresses:', err)
+                    }
+
+                    if (!depositAddresses) {
+                        const fallback = generateVirtualAddressFor(userId)
+                        depositAddresses = {
+                            'eip155:1': { usdc: fallback, usdt: fallback },
+                            'eip155:8453': { usdc: fallback, usdt: fallback },
+                            'eip155:56': { usdc: fallback, usdt: fallback },
+                            'eip155:137': { usdc: fallback, usdt: fallback },
+                            'solana:101': { usdc: fallback, usdt: fallback },
+                        }
+                        defaultEvmAddress = fallback
+                    }
 
                     // Mock data for now
                     const mockProfile: UserProfile = {
-                        id: crypto.randomUUID(),
-                        address,
-                        username: `user_${address.slice(0, 6)}`,
+                        id: userId,
+                        address: userId,
+                        virtualAddress: defaultEvmAddress,
+                        depositAddresses,
+                        username: `user_${userId.slice(0, 6)}`,
                         displayName: 'Anonymous Trader',
                         bio: 'Prediction market enthusiast',
                         avatar: '',

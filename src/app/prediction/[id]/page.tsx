@@ -634,9 +634,6 @@ export default function PredictionDetailsPage() {
           {/* Trade Button */}
           <button
             onClick={() => {
-              console.log(
-                `Trading ${tradeAction} ${selectedOutcome} for $${tradeAmount}`,
-              );
             }}
             disabled={!selectedOutcome || parseFloat(tradeAmount || "0") <= 0}
             className={`w-full py-3 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${

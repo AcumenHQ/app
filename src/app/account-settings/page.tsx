@@ -2,19 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useUserStore } from "@/stores/userStore";
-import { useAccount } from "wagmi";
-import { useAppKitAccount } from "@reown/appkit/react";
+import { usePrivy } from "@privy-io/react-auth";
 import { CopyAddress } from "@/components/CopyAddress";
-import Image from "next/image";
 import Link from "next/link";
 
 export default function AccountSettingsPage() {
   const { profile, isLoadingProfile, updateProfile } = useUserStore();
-  const { address: ethAddress, isConnected: ethConnected } = useAccount();
-  const { address: appKitAddress, isConnected: appKitConnected } =
-    useAppKitAccount();
-  const address = ethAddress || appKitAddress;
-  const isConnected = ethConnected || appKitConnected;
+  const { authenticated, user } = usePrivy();
+  const address = user?.wallet?.address || profile?.virtualAddress;
+  const isConnected = authenticated;
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [activeSection, setActiveSection] = useState<
@@ -60,7 +56,7 @@ export default function AccountSettingsPage() {
         currentEmail: address || profile.address || "", // Using connected wallet address as email placeholder
       }));
     }
-  }, [profile]);
+  }, [profile, address]);
 
   const handleSaveProfile = async () => {
     if (!profile) return;
@@ -84,8 +80,6 @@ export default function AccountSettingsPage() {
       alert("New email addresses do not match");
       return;
     }
-    // TODO: Implement email change logic
-    console.log("Email change requested:", emailForm);
     alert(
       "Email change functionality will be implemented with backend integration",
     );
@@ -101,8 +95,6 @@ export default function AccountSettingsPage() {
       alert("Password must be at least 8 characters long");
       return;
     }
-    // TODO: Implement password change logic
-    console.log("Password change requested");
     alert(
       "Password change functionality will be implemented with backend integration",
     );
@@ -164,11 +156,10 @@ export default function AccountSettingsPage() {
                   onClick={() =>
                     setActiveSection(item.id as typeof activeSection)
                   }
-                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center gap-3 ${
-                    activeSection === item.id
-                      ? "bg-primary text-primary-foreground"
-                      : "hover:bg-muted text-muted-foreground hover:text-foreground"
-                  }`}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center gap-3 ${activeSection === item.id
+                    ? "bg-primary text-primary-foreground"
+                    : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                    }`}
                 >
                   <span className="text-lg">{item.icon}</span>
                   {item.label}

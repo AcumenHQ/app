@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { WalletProvider } from "@/reown/appkit";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Header } from "@/components/Header";
 import { Poppins } from "next/font/google";
+import PrivyClientProvider from "@/lib/privyClientProvider";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -31,17 +31,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${poppins.variable} antialiased`}
-        suppressHydrationWarning={true}
-      >
-        <ThemeProvider>
-          <WalletProvider>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${poppins.variable} antialiased`} suppressHydrationWarning={true}>
+        <PrivyClientProvider>
+          <ThemeProvider>
             <Header />
             {children}
-          </WalletProvider>
-        </ThemeProvider>
+          </ThemeProvider>
+        </PrivyClientProvider>
       </body>
     </html>
   );

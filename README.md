@@ -147,6 +147,17 @@ NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id_here
 
 # API endpoints (when backend is ready)
 NEXT_PUBLIC_API_URL=http://localhost:8000
+
+# Privy (replace with your real keys when enabled)
+PRIVY_APP_ID=
+PRIVY_APP_SECRET=
+
+# Each user gets a unique generated deposit address on first sign-in
+DEPOSIT_ADDRESS_STRATEGY=first_signin_unique
+
+# Supported multichain config (CAIP-2 chain ids)
+SUPPORTED_CHAINS=eip155:1,eip155:8453,eip155:56,eip155:137,solana:101
+SUPPORTED_ASSETS=usdc,usdt
 ```
 
 ## 🔧 Development

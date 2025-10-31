@@ -55,12 +55,12 @@ export const TradingModal = ({
   };
 
   const handleTrade = () => {
-    console.log("Trading:", {
-      prediction,
-      selectedOutcome: activeOutcome,
-      action: activeTab,
-      amount,
-    });
+    // console.log("Trading:", {
+    //   prediction,
+    //   selectedOutcome: activeOutcome,
+    //   action: activeTab,
+    //   amount,
+    // });
     onClose();
   };
 

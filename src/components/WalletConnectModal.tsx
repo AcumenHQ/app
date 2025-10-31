@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useWalletIntegration } from "@/hooks/useWalletIntegration";
-import ConnectButton from "./appkit-button";
+import { useState, useEffect, useCallback } from "react";
+import { usePrivy } from "@privy-io/react-auth";
 
 interface WalletConnectModalProps {
   isOpen: boolean;
@@ -17,29 +16,28 @@ export const WalletConnectModal = ({
   title = "Connect Your Wallet",
   message = "Please connect your wallet to place bets and start trading on predictions.",
 }: WalletConnectModalProps) => {
-  const { isConnected } = useWalletIntegration();
+  const { authenticated, login } = usePrivy();
   const [isClosing, setIsClosing] = useState(false);
 
-  // Auto-close when wallet connects
-  useEffect(() => {
-    if (isConnected && isOpen) {
-      handleClose();
-    }
-  }, [isConnected, isOpen]);
-
-  if (!isOpen) return null;
-
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setIsClosing(true);
     setTimeout(() => {
       setIsClosing(false);
       onClose();
     }, 200);
-  };
+  }, [onClose]);
+
+  // Auto-close when wallet connects
+  useEffect(() => {
+    if (authenticated && isOpen) {
+      handleClose();
+    }
+  }, [authenticated, isOpen, handleClose]);
+
+  if (!isOpen) return null;
 
   const handleConnect = () => {
-    // The appkit-button will handle the connection
-    // We'll close the modal and let the user interact with the connect button
+    login();
     handleClose();
   };
 
@@ -55,9 +53,8 @@ export const WalletConnectModal = ({
       onClick={handleBackdropClick}
     >
       <div
-        className={`bg-card border border-border rounded-xl sm:rounded-2xl w-full max-w-md shadow-2xl transform transition-all duration-200 max-h-[95vh] overflow-y-auto ${
-          isClosing ? "scale-95 opacity-0" : "scale-100 opacity-100"
-        }`}
+        className={`bg-card border border-border rounded-xl sm:rounded-2xl w-full max-w-md shadow-2xl transform transition-all duration-200 max-h-[95vh] overflow-y-auto ${isClosing ? "scale-95 opacity-0" : "scale-100 opacity-100"
+          }`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-4 sm:p-6">
@@ -180,7 +177,12 @@ export const WalletConnectModal = ({
 
           {/* Action Buttons */}
           <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
-            <ConnectButton />
+            <button
+              onClick={handleConnect}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-2.5 sm:py-3 px-4 rounded-lg sm:rounded-xl transition-colors text-sm sm:text-base w-full"
+            >
+              Connect Wallet
+            </button>
             <button
               onClick={handleClose}
               className="bg-muted hover:bg-muted/80 text-muted-foreground font-medium py-2.5 sm:py-3 px-4 rounded-lg sm:rounded-xl transition-colors text-sm sm:text-base"

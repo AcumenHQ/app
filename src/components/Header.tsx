@@ -2,28 +2,22 @@
 
 import { useState, useEffect } from "react";
 import { usePredictionStore } from "@/stores/predictionStore";
-import { ConnectButton } from "@/components/appkit-button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { HamburgerMenu } from "@/components/HamburgerMenu";
-import { useAccount } from "wagmi";
-import { useAppKitAccount } from "@reown/appkit/react";
 import { useTheme } from "next-themes";
 import { usePathname } from "next/navigation";
-import { useWalletSync } from "@/hooks/useWalletSync";
 import Image from "next/image";
 import Link from "next/link";
+import { usePrivy } from "@privy-io/react-auth";
+import { useUserStore } from "@/stores/userStore";
+import { DepositModal } from "@/components/DepositModal";
 
 export function Header() {
+  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   const [isScrollingUp, setIsScrollingUp] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
   const { resolvedTheme } = useTheme();
-  const { isConnected: ethConnected } = useAccount();
-  const { isConnected: appKitConnected } = useAppKitAccount();
-  const isConnected = ethConnected || appKitConnected;
   const pathname = usePathname();
-
-  // Initialize wallet-store synchronization
-  useWalletSync();
   const {
     searchQuery,
     selectedCategory,
@@ -33,29 +27,38 @@ export function Header() {
     setSortBy,
   } = usePredictionStore();
 
+  // Privy auth & wallet
+  const { authenticated, user, login, logout, ready } = usePrivy();
+  const { profile, loadUserData } = useUserStore();
+
+  // Load user data when authenticated
+  useEffect(() => {
+    if (authenticated && user?.id && (!profile || profile.id !== user.id)) {
+      loadUserData(user.id);
+    }
+  }, [authenticated, user?.id, loadUserData, profile]);
+
+  // Show generated deposit address from Privy, not the connected wallet
+  const displayAddress = profile?.virtualAddress;
+
   // Handle scroll direction detection
   useEffect(() => {
     let ticking = false;
-
     const handleScroll = () => {
       if (!ticking) {
         requestAnimationFrame(() => {
           const currentScrollY = window.scrollY;
-
-          // Hide filter bar when scrolling down and past 200px
           if (currentScrollY > lastScrollY && currentScrollY > 200) {
             setIsScrollingUp(true);
           } else if (currentScrollY < lastScrollY || currentScrollY <= 200) {
             setIsScrollingUp(false);
           }
-
           setLastScrollY(currentScrollY);
           ticking = false;
         });
         ticking = true;
       }
     };
-
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
@@ -68,7 +71,6 @@ export function Header() {
     { id: "sports", name: "Sports" },
   ];
 
-  // Only show categories and filters on home page
   const showFullNavigation = pathname === "/";
 
   return (
@@ -77,15 +79,11 @@ export function Header() {
       <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16">
-            {/* Logo add link to the logo */}
+            {/* Logo + link */}
             <Link href="/">
               <div className="flex items-center">
                 <Image
-                  src={
-                    resolvedTheme === "dark"
-                      ? "/Artboard 9.PNG"
-                      : "/Artboard 10.PNG"
-                  }
+                  src={resolvedTheme === "dark" ? "/Artboard 9.PNG" : "/Artboard 10.PNG"}
                   alt="Acumen Logo"
                   width={32}
                   height={32}
@@ -94,18 +92,49 @@ export function Header() {
               </div>
             </Link>
 
-            {/* Connect Wallet Button */}
+            {/* Right actions */}
             <div className="flex items-center space-x-2 sm:space-x-4">
-              <button className="hidden sm:block text-sm text-muted-foreground hover:text-foreground transition-colors">
-                How it works
-              </button>
-              <ConnectButton />
+              {/* Portfolio/Cash/Deposit */}
+              {authenticated && (
+                <>
+                  <Link href="/profile" className="hidden md:flex items-center gap-1 px-2 py-1 rounded-md hover:bg-muted transition-colors">
+                    <span className="text-xs text-muted-foreground">Portfolio</span>
+                    <span className="text-xs font-semibold">$0.00</span>
+                  </Link>
+                  <Link href="/profile" className="hidden md:flex items-center gap-1 px-2 py-1 rounded-md hover:bg-muted transition-colors">
+                    <span className="text-xs text-muted-foreground">Cash</span>
+                    <span className="text-xs font-semibold">$0.00</span>
+                  </Link>
+                  <button
+                    onClick={() => setIsDepositModalOpen(true)}
+                    className="hidden sm:inline-flex items-center bg-primary text-primary-foreground text-xs font-medium px-3 py-1.5 rounded-md hover:bg-primary/90 transition-colors"
+                  >
+                    Deposit
+                  </button>
+                </>
+              )}
+              {!authenticated && (
+                <button
+                  onClick={login}
+                  className="inline-flex items-center bg-primary text-primary-foreground text-xs font-medium px-3 py-1.5 rounded-md hover:bg-primary/90 transition-colors"
+                >
+                  Connect Wallet
+                </button>
+              )}
+              {/* {authenticated && displayAddress && (
+                <span className="hidden sm:flex items-center px-2 py-1 rounded-md bg-muted text-xs font-mono">
+                  {displayAddress.slice(0, 6)}…{displayAddress.slice(-4)}
+                </span>
+              )} */}
               <ThemeToggle />
-              <HamburgerMenu isConnected={isConnected} />
+              <HamburgerMenu isConnected={authenticated} />
             </div>
           </div>
         </div>
       </div>
+
+      {/* Deposit Modal */}
+      <DepositModal isOpen={isDepositModalOpen} onClose={() => setIsDepositModalOpen(false)} />
 
       {/* Category Navigation */}
       {showFullNavigation && (
@@ -116,11 +145,10 @@ export function Header() {
                 <button
                   key={category.id}
                   onClick={() => setSelectedCategory(category.id)}
-                  className={`whitespace-nowrap py-2 px-1 border-b-2 transition-colors text-sm sm:text-base ${
-                    selectedCategory === category.id
-                      ? "border-primary text-foreground"
-                      : "border-transparent text-muted-foreground hover:text-foreground"
-                  }`}
+                  className={`whitespace-nowrap py-2 px-1 border-b-2 transition-colors text-sm sm:text-base ${selectedCategory === category.id
+                    ? "border-primary text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                    }`}
                 >
                   {category.name}
                 </button>
@@ -215,10 +243,10 @@ export function Header() {
                   onChange={(e) =>
                     setSortBy(
                       e.target.value as
-                        | "newest"
-                        | "volume"
-                        | "ending-soon"
-                        | "trending",
+                      | "newest"
+                      | "volume"
+                      | "ending-soon"
+                      | "trending",
                     )
                   }
                   className="bg-background border border-input rounded-lg px-3 sm:px-4 py-2 text-sm sm:text-base text-foreground focus:outline-none focus:ring-2 focus:ring-ring min-w-[120px] sm:min-w-[140px]"
@@ -271,10 +299,10 @@ export function Header() {
                   onChange={(e) =>
                     setSortBy(
                       e.target.value as
-                        | "newest"
-                        | "volume"
-                        | "ending-soon"
-                        | "trending",
+                      | "newest"
+                      | "volume"
+                      | "ending-soon"
+                      | "trending",
                     )
                   }
                   className="bg-background border border-input rounded-lg px-2 sm:px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring min-w-[100px] sm:min-w-[120px]"

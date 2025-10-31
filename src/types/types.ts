@@ -90,6 +90,8 @@ export interface MarketStats {
 export interface UserProfile {
     id: string
     address: string
+    virtualAddress?: string
+    depositAddresses?: Record<string, { usdc?: string; usdt?: string }>
     username: string
     displayName: string
     bio: string
@@ -130,6 +132,30 @@ export interface UserAchievement {
     unlockedAt: Date
     rarity: 'common' | 'rare' | 'epic' | 'legendary'
     points: number
+}
+
+// ============================================================================
+// DEPOSIT TYPES
+// ============================================================================
+
+export type DepositChain = "ethereum" | "base" | "bnb" | "solana";
+export type DepositToken = "usdc" | "usdt";
+
+export interface DepositChainInfo {
+    id: DepositChain;
+    name: string;
+    chainId: string;
+}
+
+export interface DepositTokenInfo {
+    id: DepositToken;
+    name: string;
+    symbol: string;
+}
+
+export interface DepositModalProps {
+    isOpen: boolean;
+    onClose: () => void;
 }
 
 // ============================================================================

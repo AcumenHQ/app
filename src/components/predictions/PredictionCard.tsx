@@ -8,14 +8,14 @@ import type {
   PredictionCardProps,
 } from "@/types/types";
 import { usePredictionStore } from "@/stores/predictionStore";
-import { useWalletIntegration } from "@/hooks/useWalletIntegration";
+import { usePrivy } from "@privy-io/react-auth";
 import { CircularProgress } from "@/components/CircularProgress";
 import { TradingModal } from "@/components/TradingModal";
 import { WalletConnectModal } from "@/components/WalletConnectModal";
 
 export const PredictionCard = ({ prediction }: PredictionCardProps) => {
   const router = useRouter();
-  const { isConnected } = useWalletIntegration();
+  const { authenticated } = usePrivy();
   const { placeBet, addToWatchlist, removeFromWatchlist, watchlist } =
     usePredictionStore();
   const [isPlacingBet, setIsPlacingBet] = useState(false);
@@ -44,7 +44,7 @@ export const PredictionCard = ({ prediction }: PredictionCardProps) => {
   };
 
   const handleBet = async (side: "yes" | "no", optionId?: string) => {
-    if (!isConnected) {
+    if (!authenticated) {
       setIsWalletModalOpen(true);
       return;
     }
