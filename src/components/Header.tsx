@@ -29,14 +29,20 @@ export function Header() {
 
   // Privy auth & wallet
   const { authenticated, user, login, logout, ready } = usePrivy();
-  const { profile, loadUserData } = useUserStore();
+  const { profile, walletBalance, loadUserData, loadWalletBalance } = useUserStore();
 
   // Load user data when authenticated
   useEffect(() => {
     if (authenticated && user?.id && (!profile || profile.id !== user.id)) {
       loadUserData(user.id);
+      // Get wallet address from Privy user
+      const walletAddress = user?.wallet?.address || profile?.virtualAddress;
+      // Default to Ethereum mainnet (chainId: 1)
+      // In production, you may want to detect the active chain from the wallet provider
+      const chainId = '1';
+      loadWalletBalance(user.id, walletAddress, chainId);
     }
-  }, [authenticated, user?.id, loadUserData, profile]);
+  }, [authenticated, user?.id, user?.wallet?.address, loadUserData, loadWalletBalance, profile]);
 
   // Show generated deposit address from Privy, not the connected wallet
   const displayAddress = profile?.virtualAddress;
@@ -99,15 +105,19 @@ export function Header() {
                 <>
                   <Link href="/profile" className="hidden md:flex items-center gap-1 px-2 py-1 rounded-md hover:bg-muted transition-colors">
                     <span className="text-xs text-muted-foreground">Portfolio</span>
-                    <span className="text-xs font-semibold">$0.00</span>
+                    <span className="text-xs font-semibold">
+                      ${walletBalance?.portfolio.toFixed(2) || "0.00"}
+                    </span>
                   </Link>
                   <Link href="/profile" className="hidden md:flex items-center gap-1 px-2 py-1 rounded-md hover:bg-muted transition-colors">
                     <span className="text-xs text-muted-foreground">Cash</span>
-                    <span className="text-xs font-semibold">$0.00</span>
+                    <span className="text-xs font-semibold">
+                      ${walletBalance?.cash.toFixed(2) || "0.00"}
+                    </span>
                   </Link>
                   <button
                     onClick={() => setIsDepositModalOpen(true)}
-                    className="hidden sm:inline-flex items-center bg-primary text-primary-foreground text-xs font-medium px-3 py-1.5 rounded-md hover:bg-primary/90 transition-colors"
+                    className="hidden sm:inline-flex items-center bg-primary text-primary-foreground text-xs font-medium px-3 py-1.5 rounded-md hover:bg-primary/90 transition-colors cursor-pointer"
                   >
                     Deposit
                   </button>
@@ -116,7 +126,7 @@ export function Header() {
               {!authenticated && (
                 <button
                   onClick={login}
-                  className="inline-flex items-center bg-primary text-primary-foreground text-xs font-medium px-3 py-1.5 rounded-md hover:bg-primary/90 transition-colors"
+                  className="inline-flex items-center bg-primary text-primary-foreground text-xs font-medium px-3 py-1.5 rounded-md hover:bg-primary/90 transition-colors cursor-pointer"
                 >
                   Connect Wallet
                 </button>
@@ -145,7 +155,7 @@ export function Header() {
                 <button
                   key={category.id}
                   onClick={() => setSelectedCategory(category.id)}
-                  className={`whitespace-nowrap py-2 px-1 border-b-2 transition-colors text-sm sm:text-base ${selectedCategory === category.id
+                  className={`whitespace-nowrap py-2 px-1 border-b-2 transition-colors text-sm sm:text-base cursor-pointer ${selectedCategory === category.id
                     ? "border-primary text-foreground"
                     : "border-transparent text-muted-foreground hover:text-foreground"
                     }`}
@@ -167,7 +177,7 @@ export function Header() {
             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between py-3 gap-3 lg:gap-4">
               {/* Left: Filters + Bookmarks */}
               <div className="flex items-center space-x-3 sm:space-x-6">
-                <button className="flex items-center space-x-2 sm:space-x-3 px-3 sm:px-4 py-2 rounded-lg hover:bg-muted transition-colors">
+                <button className="flex items-center space-x-2 sm:space-x-3 px-3 sm:px-4 py-2 rounded-lg hover:bg-muted transition-colors cursor-pointer">
                   <svg
                     className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground"
                     fill="none"
@@ -185,7 +195,7 @@ export function Header() {
                     Filters
                   </span>
                 </button>
-                <button className="flex items-center space-x-2 sm:space-x-3 px-3 sm:px-4 py-2 rounded-lg hover:bg-muted transition-colors">
+                <button className="flex items-center space-x-2 sm:space-x-3 px-3 sm:px-4 py-2 rounded-lg hover:bg-muted transition-colors cursor-pointer">
                   <svg
                     className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground"
                     fill="none"

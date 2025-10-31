@@ -68,7 +68,7 @@ export function HamburgerMenu({ isConnected }: HamburgerMenuProps) {
       {/* Hamburger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="p-2 rounded-lg hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
+        className="p-2 rounded-lg hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer"
         aria-label="User menu"
       >
         <div className="w-5 h-5 flex flex-col justify-between">
@@ -184,7 +184,7 @@ export function HamburgerMenu({ isConnected }: HamburgerMenuProps) {
               {/* Logout */}
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                className="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors cursor-pointer"
               >
                 <svg
                   className="w-4 h-4"

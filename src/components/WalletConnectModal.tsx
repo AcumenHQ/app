@@ -179,13 +179,13 @@ export const WalletConnectModal = ({
           <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
             <button
               onClick={handleConnect}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-2.5 sm:py-3 px-4 rounded-lg sm:rounded-xl transition-colors text-sm sm:text-base w-full"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-2.5 sm:py-3 px-4 rounded-lg sm:rounded-xl transition-colors text-sm sm:text-base w-full cursor-pointer"
             >
               Connect Wallet
             </button>
             <button
               onClick={handleClose}
-              className="bg-muted hover:bg-muted/80 text-muted-foreground font-medium py-2.5 sm:py-3 px-4 rounded-lg sm:rounded-xl transition-colors text-sm sm:text-base"
+              className="bg-muted hover:bg-muted/80 text-muted-foreground font-medium py-2.5 sm:py-3 px-4 rounded-lg sm:rounded-xl transition-colors text-sm sm:text-base cursor-pointer"
             >
               Maybe Later
             </button>

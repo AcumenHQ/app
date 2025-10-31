@@ -124,6 +124,17 @@ export interface UserStats {
     percentile: number
 }
 
+export interface WalletBalance {
+    portfolio: number // Total portfolio value
+    cash: number // Available cash/USDC balance
+    tokens: {
+        usdc: number
+        usdt: number
+        eth?: number
+        sol?: number
+    }
+}
+
 export interface UserAchievement {
     id: string
     title: string
@@ -154,6 +165,11 @@ export interface DepositTokenInfo {
 }
 
 export interface DepositModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+}
+
+export interface WithdrawModalProps {
     isOpen: boolean;
     onClose: () => void;
 }

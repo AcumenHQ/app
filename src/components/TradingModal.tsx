@@ -109,9 +109,8 @@ export const TradingModal = ({
                 {prediction.title}
               </h3>
               <p
-                className={`text-xs sm:text-sm font-medium ${
-                  activeOutcome === "yes" ? "text-green-600" : "text-red-600"
-                }`}
+                className={`text-xs sm:text-sm font-medium ${activeOutcome === "yes" ? "text-green-600" : "text-red-600"
+                  }`}
               >
                 {getHeaderText()}
               </p>
@@ -123,21 +122,19 @@ export const TradingModal = ({
             <div className="flex gap-1 w-full sm:w-auto">
               <button
                 onClick={() => setActiveTab("buy")}
-                className={`flex-1 sm:flex-none px-4 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
-                  activeTab === "buy"
-                    ? "bg-green-500 text-white"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80"
-                }`}
+                className={`flex-1 sm:flex-none px-4 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all cursor-pointer ${activeTab === "buy"
+                  ? "bg-green-500 text-white"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  }`}
               >
                 Buy
               </button>
               <button
                 onClick={() => setActiveTab("sell")}
-                className={`flex-1 sm:flex-none px-4 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
-                  activeTab === "sell"
-                    ? "bg-green-500 text-white"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80"
-                }`}
+                className={`flex-1 sm:flex-none px-4 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${activeTab === "sell"
+                  ? "bg-green-500 text-white"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  }`}
               >
                 Sell
               </button>
@@ -159,12 +156,11 @@ export const TradingModal = ({
             <div className="flex gap-2 mb-4 sm:mb-5">
               <button
                 onClick={() => setActiveOutcome("yes")}
-                className={`flex-1 p-3 sm:p-3.5 rounded-lg sm:rounded-xl text-left transition-all border-2 ${
-                  activeOutcome === "yes"
-                    ? getOutcomeColor("yes", true) + " border-transparent"
-                    : getOutcomeColor("yes", false) +
-                      " border-transparent hover:border-green-200"
-                }`}
+                className={`flex-1 p-3 sm:p-3.5 rounded-lg sm:rounded-xl text-left transition-all border-2 cursor-pointer ${activeOutcome === "yes"
+                  ? getOutcomeColor("yes", true) + " border-transparent"
+                  : getOutcomeColor("yes", false) +
+                  " border-transparent hover:border-green-200"
+                  }`}
               >
                 <div className="flex justify-between items-center">
                   <span className="font-semibold text-sm sm:text-base">
@@ -177,12 +173,11 @@ export const TradingModal = ({
               </button>
               <button
                 onClick={() => setActiveOutcome("no")}
-                className={`flex-1 p-3 sm:p-3.5 rounded-lg sm:rounded-xl text-left transition-all border-2 ${
-                  activeOutcome === "no"
-                    ? getOutcomeColor("no", true) + " border-transparent"
-                    : getOutcomeColor("no", false) +
-                      " border-transparent hover:border-red-200"
-                }`}
+                className={`flex-1 p-3 sm:p-3.5 rounded-lg sm:rounded-xl text-left transition-all border-2 cursor-pointer ${activeOutcome === "no"
+                  ? getOutcomeColor("no", true) + " border-transparent"
+                  : getOutcomeColor("no", false) +
+                  " border-transparent hover:border-red-200"
+                  }`}
               >
                 <div className="flex justify-between items-center">
                   <span className="font-semibold text-sm sm:text-base">No</span>
@@ -221,7 +216,7 @@ export const TradingModal = ({
           {/* Sign up to trade button */}
           <button
             onClick={handleTrade}
-            className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 sm:py-3.5 px-4 rounded-lg sm:rounded-xl transition-colors shadow-sm text-sm sm:text-base"
+            className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 sm:py-3.5 px-4 rounded-lg sm:rounded-xl transition-colors shadow-sm text-sm sm:text-base cursor-pointer"
           >
             Trade
           </button>

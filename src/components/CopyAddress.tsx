@@ -60,7 +60,7 @@ export function CopyAddress({
       <span className="font-mono text-sm">{displayText}</span>
       <button
         onClick={handleCopy}
-        className="p-1 rounded hover:bg-muted transition-all duration-200 hover:scale-110 active:scale-95"
+        className="p-1 rounded hover:bg-muted transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer"
         title={copied ? "Copied!" : "Copy full address"}
         disabled={copied}
       >

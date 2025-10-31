@@ -4,20 +4,28 @@ import { useState, useEffect } from "react";
 import { useUserStore } from "@/stores/userStore";
 import { usePrivy } from "@privy-io/react-auth";
 import { DepositModal } from "@/components/DepositModal";
+import { WithdrawModal } from "@/components/WithdrawModal";
 
 export default function ProfilePage() {
   const { authenticated, user } = usePrivy();
-  const { profile, loadUserData } = useUserStore();
+  const { profile, walletBalance, loadUserData, loadWalletBalance } = useUserStore();
   const [pnlRange, setPnlRange] = useState<"1D" | "1W" | "1M" | "ALL">("1D");
   const [activeTab, setActiveTab] = useState<"positions" | "open" | "history">("positions");
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
+  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
 
   // Load user data when authenticated
   useEffect(() => {
     if (authenticated && user?.id && (!profile || profile.id !== user.id)) {
       loadUserData(user.id);
+      // Get wallet address from Privy user
+      const walletAddress = user?.wallet?.address || profile?.virtualAddress;
+      // Default to Ethereum mainnet (chainId: 1)
+      // In production, you may want to detect the active chain from the wallet provider
+      const chainId = '1';
+      loadWalletBalance(user.id, walletAddress, chainId);
     }
-  }, [authenticated, user?.id, profile, loadUserData]);
+  }, [authenticated, user?.id, user?.wallet?.address, profile, loadUserData, loadWalletBalance]);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -28,15 +36,22 @@ export default function ProfilePage() {
             <div className="text-sm text-muted-foreground flex items-center gap-2">
               <span>Portfolio</span>
             </div>
-            <div className="mt-2 text-3xl font-semibold">$0.00</div>
+            <div className="mt-2 text-3xl font-semibold">
+              ${walletBalance?.portfolio.toFixed(2) || "0.00"}
+            </div>
             <div className="mt-4 flex gap-3">
               <button
                 onClick={() => setIsDepositModalOpen(true)}
-                className="inline-flex items-center bg-primary text-primary-foreground text-sm font-medium px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
+                className="inline-flex items-center bg-primary text-primary-foreground text-sm font-medium px-4 py-2 rounded-md hover:bg-primary/90 transition-colors cursor-pointer"
               >
                 Deposit
               </button>
-              <button className="inline-flex items-center border border-input text-sm px-4 py-2 rounded-md hover:bg-muted transition-colors">Withdraw</button>
+              <button
+                onClick={() => setIsWithdrawModalOpen(true)}
+                className="inline-flex items-center border border-input text-sm px-4 py-2 rounded-md hover:bg-muted transition-colors cursor-pointer"
+              >
+                Withdraw
+              </button>
             </div>
           </div>
           <div className="bg-card rounded-lg border border-border p-4">
@@ -44,7 +59,7 @@ export default function ProfilePage() {
               <span className="text-sm text-muted-foreground">Profit/Loss</span>
               <div className="flex gap-2">
                 {(["1D", "1W", "1M", "ALL"] as const).map(r => (
-                  <button key={r} onClick={() => setPnlRange(r)} className={`px-2 py-1 rounded-md text-xs ${pnlRange === r ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted"}`}>{r}</button>
+                  <button key={r} onClick={() => setPnlRange(r)} className={`px-2 py-1 rounded-md text-xs cursor-pointer ${pnlRange === r ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted"}`}>{r}</button>
                 ))}
               </div>
             </div>
@@ -57,9 +72,9 @@ export default function ProfilePage() {
         <div className="bg-card rounded-lg border border-border">
           {/* Tabs */}
           <div className="border-b border-border px-4 py-3 flex items-center gap-6">
-            <button onClick={() => setActiveTab("positions")} className={`text-sm pb-1 ${activeTab === "positions" ? "font-medium border-b-2 border-primary" : "text-muted-foreground"}`}>Positions</button>
-            <button onClick={() => setActiveTab("open")} className={`text-sm pb-1 ${activeTab === "open" ? "font-medium border-b-2 border-primary" : "text-muted-foreground"}`}>Open orders</button>
-            <button onClick={() => setActiveTab("history")} className={`text-sm pb-1 ${activeTab === "history" ? "font-medium border-b-2 border-primary" : "text-muted-foreground"}`}>History</button>
+            <button onClick={() => setActiveTab("positions")} className={`text-sm pb-1 cursor-pointer ${activeTab === "positions" ? "font-medium border-b-2 border-primary" : "text-muted-foreground"}`}>Positions</button>
+            <button onClick={() => setActiveTab("open")} className={`text-sm pb-1 cursor-pointer ${activeTab === "open" ? "font-medium border-b-2 border-primary" : "text-muted-foreground"}`}>Open orders</button>
+            <button onClick={() => setActiveTab("history")} className={`text-sm pb-1 cursor-pointer ${activeTab === "history" ? "font-medium border-b-2 border-primary" : "text-muted-foreground"}`}>History</button>
           </div>
 
           {/* Search/controls row */}
@@ -90,7 +105,7 @@ export default function ProfilePage() {
           {activeTab === "open" && (
             <div className="px-4 pb-8">
               <div className="flex justify-center">
-                <button className="w-full md:w-[420px] bg-primary text-primary-foreground rounded-md h-11 font-medium hover:bg-primary/90">Generate</button>
+                <button className="w-full md:w-[420px] bg-primary text-primary-foreground rounded-md h-11 font-medium hover:bg-primary/90 cursor-pointer">Generate</button>
               </div>
             </div>
           )}
@@ -118,6 +133,9 @@ export default function ProfilePage() {
 
       {/* Deposit Modal */}
       <DepositModal isOpen={isDepositModalOpen} onClose={() => setIsDepositModalOpen(false)} />
+
+      {/* Withdraw Modal */}
+      <WithdrawModal isOpen={isWithdrawModalOpen} onClose={() => setIsWithdrawModalOpen(false)} />
     </div>
   );
 }

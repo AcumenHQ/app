@@ -7,15 +7,26 @@ import { CopyAddress } from "@/components/CopyAddress";
 import Link from "next/link";
 
 export default function AccountSettingsPage() {
-  const { profile, isLoadingProfile, updateProfile } = useUserStore();
+  const { profile, walletBalance, isLoadingProfile, updateProfile, loadWalletBalance } = useUserStore();
   const { authenticated, user } = usePrivy();
   const address = user?.wallet?.address || profile?.virtualAddress;
   const isConnected = authenticated;
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [activeSection, setActiveSection] = useState<
-    "profile" | "email" | "password"
+    "profile" | "email" | "password" | "wallet"
   >("profile");
+
+  // Load wallet balance when authenticated
+  useEffect(() => {
+    if (authenticated && user?.id) {
+      const walletAddress = user?.wallet?.address || profile?.virtualAddress;
+      // Default to Ethereum mainnet (chainId: 1)
+      // In production, you may want to detect the active chain from the wallet provider
+      const chainId = '1';
+      loadWalletBalance(user.id, walletAddress, chainId);
+    }
+  }, [authenticated, user?.id, user?.wallet?.address, profile?.virtualAddress, loadWalletBalance]);
 
   // Form states
   const [profileForm, setProfileForm] = useState({
@@ -148,6 +159,7 @@ export default function AccountSettingsPage() {
             <nav className="space-y-2">
               {[
                 { id: "profile", label: "Profile Information", icon: "👤" },
+                { id: "wallet", label: "Wallet & Balance", icon: "💰" },
                 { id: "email", label: "Email Settings", icon: "✉️" },
                 { id: "password", label: "Password Settings", icon: "🔒" },
               ].map((item) => (
@@ -170,6 +182,101 @@ export default function AccountSettingsPage() {
 
           {/* Main Content */}
           <div className="lg:w-3/4">
+            {activeSection === "wallet" && (
+              <div className="bg-card rounded-lg border border-border p-6">
+                <h2 className="text-xl font-semibold mb-6">Wallet & Balance</h2>
+
+                <div className="space-y-6">
+                  {/* Balance Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-4 bg-muted/50 rounded-lg border border-border">
+                      <div className="text-sm text-muted-foreground mb-1">Portfolio Value</div>
+                      <div className="text-2xl font-semibold">
+                        ${walletBalance?.portfolio.toFixed(2) || "0.00"}
+                      </div>
+                    </div>
+                    <div className="p-4 bg-muted/50 rounded-lg border border-border">
+                      <div className="text-sm text-muted-foreground mb-1">Available Cash</div>
+                      <div className="text-2xl font-semibold">
+                        ${walletBalance?.cash.toFixed(2) || "0.00"}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Token Balances */}
+                  <div>
+                    <h3 className="font-medium mb-3">Token Balances</h3>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
+                            <span className="text-white font-bold text-xs">$</span>
+                          </div>
+                          <span className="font-medium">USDC</span>
+                        </div>
+                        <span className="font-semibold">
+                          {walletBalance?.tokens.usdc.toFixed(2) || "0.00"}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
+                            <span className="text-white font-bold text-xs">₮</span>
+                          </div>
+                          <span className="font-medium">USDT</span>
+                        </div>
+                        <span className="font-semibold">
+                          {walletBalance?.tokens.usdt.toFixed(2) || "0.00"}
+                        </span>
+                      </div>
+                      {walletBalance?.tokens.eth && walletBalance.tokens.eth > 0 && (
+                        <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
+                              <span className="text-white font-bold text-xs">Ξ</span>
+                            </div>
+                            <span className="font-medium">ETH</span>
+                          </div>
+                          <span className="font-semibold">
+                            {walletBalance.tokens.eth.toFixed(4)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Wallet Address */}
+                  <div className="pt-4 border-t border-border">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-medium">Wallet Address</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Your connected wallet address
+                        </p>
+                      </div>
+                      <div>
+                        {(address && isConnected) || profile?.address ? (
+                          <CopyAddress
+                            address={
+                              address && isConnected
+                                ? address
+                                : profile?.address || ""
+                            }
+                            className="text-muted-foreground"
+                            iconSize="md"
+                          />
+                        ) : (
+                          <span className="text-sm font-mono text-muted-foreground">
+                            Not connected
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {activeSection === "profile" && (
               <div className="bg-card rounded-lg border border-border p-6">
                 <div className="flex items-center justify-between mb-6">
@@ -177,7 +284,7 @@ export default function AccountSettingsPage() {
                   {!isEditing ? (
                     <button
                       onClick={() => setIsEditing(true)}
-                      className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+                      className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors cursor-pointer"
                     >
                       Edit Profile
                     </button>
@@ -199,14 +306,14 @@ export default function AccountSettingsPage() {
                             });
                           }
                         }}
-                        className="px-4 py-2 border border-border rounded-lg hover:bg-muted transition-colors"
+                        className="px-4 py-2 border border-border rounded-lg hover:bg-muted transition-colors cursor-pointer"
                         disabled={isSaving}
                       >
                         Cancel
                       </button>
                       <button
                         onClick={handleSaveProfile}
-                        className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+                        className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         disabled={isSaving}
                       >
                         {isSaving ? "Saving..." : "Save Changes"}

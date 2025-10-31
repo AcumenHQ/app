@@ -6,7 +6,7 @@ export default function PrivyClientProvider({ children }: { children: React.Reac
   return (
     <PrivyProvider
       appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID!}
-      clientId={process.env.NEXT_PUBLIC_PRIVY_CLIENT_ID!} // <-- Add this in your .env.local
+      clientId={process.env.NEXT_PUBLIC_PRIVY_CLIENT_ID!}
       config={{
         loginMethods: ["email", "wallet"],
         appearance: { theme: resolvedTheme as "light" | "dark", accentColor: "#6f46be" },

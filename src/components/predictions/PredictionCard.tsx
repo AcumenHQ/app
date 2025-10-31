@@ -89,7 +89,7 @@ export const PredictionCard = ({ prediction }: PredictionCardProps) => {
         <button
           onClick={() => handleBet("yes")}
           disabled={isPlacingBet}
-          className="flex-1 bg-green-500 hover:bg-green-600 disabled:bg-gray-500 text-white text-xs sm:text-sm px-2 sm:px-3 py-2 rounded font-medium transition-colors"
+          className="flex-1 bg-green-500 hover:bg-green-600 disabled:bg-gray-500 text-white text-xs sm:text-sm px-2 sm:px-3 py-2 rounded font-medium transition-colors cursor-pointer disabled:cursor-not-allowed"
         >
           {isPlacingBet ? "..." : "Yes"}
         </button>
@@ -121,7 +121,7 @@ export const PredictionCard = ({ prediction }: PredictionCardProps) => {
                   <button
                     onClick={() => handleBet("yes", option.id)}
                     disabled={isPlacingBet}
-                    className="bg-green-500 hover:bg-green-600 disabled:bg-gray-500 text-white text-xs px-1.5 sm:px-2 py-1 rounded font-medium transition-colors"
+                    className="bg-green-500 hover:bg-green-600 disabled:bg-gray-500 text-white text-xs px-1.5 sm:px-2 py-1 rounded font-medium transition-colors cursor-pointer disabled:cursor-not-allowed"
                   >
                     {isPlacingBet ? "..." : "Yes"}
                   </button>
@@ -188,11 +188,10 @@ export const PredictionCard = ({ prediction }: PredictionCardProps) => {
           {/* Star button for watchlist */}
           <button
             onClick={toggleWatchlist}
-            className={`p-1 rounded transition-colors shrink-0 ${
-              isWatched
-                ? "text-yellow-400"
-                : "text-muted-foreground hover:text-yellow-400"
-            }`}
+            className={`p-1 rounded transition-colors shrink-0 cursor-pointer ${isWatched
+              ? "text-yellow-400"
+              : "text-muted-foreground hover:text-yellow-400"
+              }`}
           >
             <svg
               className="w-3 h-3 sm:w-4 sm:h-4"
@@ -230,7 +229,7 @@ export const PredictionCard = ({ prediction }: PredictionCardProps) => {
           </div>
 
           <div className="flex items-center space-x-2">
-            <button className="text-muted-foreground hover:text-card-foreground transition-colors">
+            <button className="text-muted-foreground hover:text-card-foreground transition-colors cursor-pointer">
               <svg
                 className="w-4 h-4"
                 fill="none"
@@ -245,7 +244,7 @@ export const PredictionCard = ({ prediction }: PredictionCardProps) => {
                 />
               </svg>
             </button>
-            <button className="text-muted-foreground hover:text-card-foreground transition-colors">
+            <button className="text-muted-foreground hover:text-card-foreground transition-colors cursor-pointer">
               <svg
                 className="w-4 h-4"
                 fill="none"

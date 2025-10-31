@@ -4,7 +4,8 @@ import type {
     UserProfile,
     UserStats,
     UserAchievement,
-    UserStoreState
+    UserStoreState,
+    WalletBalance
 } from '@/types/types'
 
 // Deterministically derive a pseudo wallet address from a connected account or email
@@ -66,11 +67,13 @@ interface UserState {
     profile: UserProfile | null
     stats: UserStats | null
     preferences: UserPreferences
+    walletBalance: WalletBalance | null
 
     // Loading states
     isLoadingProfile: boolean
     isLoadingStats: boolean
     isUpdatingProfile: boolean
+    isLoadingBalance: boolean
 
     // Error handling
     error: string | null
@@ -79,15 +82,18 @@ interface UserState {
     setProfile: (profile: UserProfile | null) => void
     setStats: (stats: UserStats | null) => void
     setPreferences: (preferences: Partial<UserPreferences>) => void
+    setWalletBalance: (balance: WalletBalance | null) => void
     setLoadingProfile: (loading: boolean) => void
     setLoadingStats: (loading: boolean) => void
     setUpdatingProfile: (updating: boolean) => void
+    setLoadingBalance: (loading: boolean) => void
     setError: (error: string | null) => void
 
     // User actions
     updateProfile: (updates: Partial<UserProfile>) => Promise<void>
     updatePreferences: (updates: Partial<UserPreferences>) => Promise<void>
     loadUserData: (userId: string) => Promise<void>
+    loadWalletBalance: (userId: string, walletAddress?: string, chainId?: string) => Promise<void>
     resetUser: () => void
 }
 
@@ -97,6 +103,7 @@ export const useUserStore = create<UserState>()(
             // Initial state
             profile: null,
             stats: null,
+            walletBalance: null,
             preferences: {
                 theme: 'auto',
                 language: 'en',
@@ -130,6 +137,7 @@ export const useUserStore = create<UserState>()(
             isLoadingProfile: false,
             isLoadingStats: false,
             isUpdatingProfile: false,
+            isLoadingBalance: false,
             error: null,
 
             // Actions
@@ -138,9 +146,11 @@ export const useUserStore = create<UserState>()(
             setPreferences: (updates) => set((state) => ({
                 preferences: { ...state.preferences, ...updates }
             })),
+            setWalletBalance: (balance) => set({ walletBalance: balance }),
             setLoadingProfile: (loading) => set({ isLoadingProfile: loading }),
             setLoadingStats: (loading) => set({ isLoadingStats: loading }),
             setUpdatingProfile: (updating) => set({ isUpdatingProfile: updating }),
+            setLoadingBalance: (loading) => set({ isLoadingBalance: loading }),
             setError: (error) => set({ error }),
 
             // User actions
@@ -245,9 +255,22 @@ export const useUserStore = create<UserState>()(
                         percentile: 0,
                     }
 
+                    // Load wallet balance
+                    const mockBalance: WalletBalance = {
+                        portfolio: 1250.50,
+                        cash: 850.25,
+                        tokens: {
+                            usdc: 850.25,
+                            usdt: 0,
+                            eth: 0.15,
+                            sol: 0
+                        }
+                    }
+
                     set({
                         profile: mockProfile,
                         stats: mockStats,
+                        walletBalance: mockBalance,
                         isLoadingProfile: false,
                         isLoadingStats: false,
                     })
@@ -260,12 +283,76 @@ export const useUserStore = create<UserState>()(
                 }
             },
 
+            loadWalletBalance: async (userId, walletAddress?: string, chainId: string = '1') => {
+                set({ isLoadingBalance: true, error: null })
+                try {
+                    // If no wallet address provided, try to get from profile
+                    const address = walletAddress || get().profile?.virtualAddress || get().profile?.address;
+
+                    if (!address) {
+                        // Fallback to mock data if no address
+                        const mockBalance: WalletBalance = {
+                            portfolio: 0,
+                            cash: 0,
+                            tokens: {
+                                usdc: 0,
+                                usdt: 0,
+                                eth: 0,
+                                sol: 0
+                            }
+                        }
+                        set({ walletBalance: mockBalance, isLoadingBalance: false })
+                        return
+                    }
+
+                    // Use ethers.js to fetch real balances (client-side only)
+                    if (typeof window !== 'undefined') {
+                        const { fetchWalletBalance } = await import('@/lib/balanceUtils')
+                        const balance = await fetchWalletBalance(address, chainId)
+                        set({ walletBalance: balance, isLoadingBalance: false })
+                    } else {
+                        // Server-side fallback
+                        const mockBalance: WalletBalance = {
+                            portfolio: 0,
+                            cash: 0,
+                            tokens: {
+                                usdc: 0,
+                                usdt: 0,
+                                eth: 0,
+                                sol: 0
+                            }
+                        }
+                        set({ walletBalance: mockBalance, isLoadingBalance: false })
+                    }
+                } catch (error) {
+                    console.error('Error loading wallet balance:', error)
+                    // Fallback to zero balance on error
+                    const fallbackBalance: WalletBalance = {
+                        portfolio: 0,
+                        cash: 0,
+                        tokens: {
+                            usdc: 0,
+                            usdt: 0,
+                            eth: 0,
+                            sol: 0
+                        }
+                    }
+                    set({
+                        walletBalance: fallbackBalance,
+                        isLoadingBalance: false,
+                        error: error instanceof Error ? error.message : 'Failed to load wallet balance',
+                    })
+                }
+            },
+
             resetUser: () => set({
                 profile: null,
                 stats: null,
+                walletBalance: null,
                 isLoadingProfile: false,
                 isLoadingStats: false,
                 isUpdatingProfile: false,
+                isLoadingBalance: false,
                 error: null,
             }),
         }),

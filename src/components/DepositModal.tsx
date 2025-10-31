@@ -10,7 +10,7 @@ import { QRCodeSVG } from "qrcode.react";
 
 export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
     const { authenticated, user } = usePrivy();
-    const { profile } = useUserStore();
+    const { profile, walletBalance } = useUserStore();
     const [isClosing, setIsClosing] = useState(false);
     const [step, setStep] = useState<"initial" | "transfer">("initial");
     const [selectedChain, setSelectedChain] = useState<DepositChain | null>("bnb");
@@ -153,7 +153,7 @@ export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
                                     setIsTokenDropdownOpen(false);
                                     setIsChainDropdownOpen(false);
                                 }}
-                                className="p-2 hover:bg-muted rounded-lg transition-colors"
+                                className="p-2 hover:bg-muted rounded-lg transition-colors cursor-pointer"
                             >
                                 <svg
                                     className="w-5 h-5 text-muted-foreground"
@@ -170,7 +170,7 @@ export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
                                 {step === "initial" ? "Deposit" : "Transfer Crypto"}
                             </h2>
                             <p className="text-sm text-muted-foreground mt-1">
-                                Polymarket Balance: $0.00
+                                Polymarket Balance: ${walletBalance?.portfolio.toFixed(2) || "0.00"}
                             </p>
                         </div>
                         <button
@@ -241,7 +241,7 @@ export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
                                             setIsTokenDropdownOpen(!isTokenDropdownOpen);
                                             setIsChainDropdownOpen(false);
                                         }}
-                                        className="w-full flex items-center justify-between p-3 bg-muted border border-border rounded-lg hover:bg-muted/80 transition-colors"
+                                        className="w-full flex items-center justify-between p-3 bg-muted border border-border rounded-lg hover:bg-muted/80 transition-colors cursor-pointer"
                                     >
                                         <div className="flex items-center space-x-2">
                                             {selectedToken && getTokenIcon(selectedToken)}
@@ -267,7 +267,7 @@ export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
                                                         setSelectedToken(token.id);
                                                         setIsTokenDropdownOpen(false);
                                                     }}
-                                                    className="w-full flex items-center space-x-2 p-3 hover:bg-muted transition-colors"
+                                                    className="w-full flex items-center space-x-2 p-3 hover:bg-muted transition-colors cursor-pointer"
                                                 >
                                                     {getTokenIcon(token.id)}
                                                     <span className="font-medium text-card-foreground">{token.symbol}</span>
@@ -295,7 +295,7 @@ export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
                                             setIsChainDropdownOpen(!isChainDropdownOpen);
                                             setIsTokenDropdownOpen(false);
                                         }}
-                                        className="w-full flex items-center justify-between p-3 bg-muted border border-border rounded-lg hover:bg-muted/80 transition-colors"
+                                        className="w-full flex items-center justify-between p-3 bg-muted border border-border rounded-lg hover:bg-muted/80 transition-colors cursor-pointer"
                                     >
                                         <div className="flex items-center space-x-2">
                                             {selectedChain && getChainIcon(selectedChain)}
@@ -321,7 +321,7 @@ export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
                                                         setSelectedChain(chain.id);
                                                         setIsChainDropdownOpen(false);
                                                     }}
-                                                    className="w-full flex items-center space-x-2 p-3 hover:bg-muted transition-colors"
+                                                    className="w-full flex items-center space-x-2 p-3 hover:bg-muted transition-colors cursor-pointer"
                                                 >
                                                     {getChainIcon(chain.id)}
                                                     <span className="font-medium text-card-foreground">{chain.name}</span>
@@ -358,7 +358,7 @@ export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
                                             <label className="text-sm font-medium text-card-foreground">
                                                 Your deposit address
                                             </label>
-                                            <button className="text-xs text-primary hover:underline">
+                                            <button className="text-xs text-primary hover:underline cursor-pointer">
                                                 Terms apply
                                             </button>
                                         </div>
@@ -375,7 +375,7 @@ export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
                                                     console.error("Failed to copy:", error);
                                                 }
                                             }}
-                                            className="w-full flex items-center justify-center gap-2 bg-muted border border-border rounded-lg p-3 hover:bg-muted/80 transition-colors"
+                                            className="w-full flex items-center justify-center gap-2 bg-muted border border-border rounded-lg p-3 hover:bg-muted/80 transition-colors cursor-pointer"
                                         >
                                             <svg
                                                 className="w-4 h-4 text-muted-foreground"
