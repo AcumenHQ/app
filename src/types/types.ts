@@ -91,6 +91,7 @@ export interface UserProfile {
     id: string
     address: string
     virtualAddress?: string
+    solanaAddress?: string
     depositAddresses?: Record<string, { usdc?: string; usdt?: string }>
     username: string
     displayName: string
@@ -149,7 +150,7 @@ export interface UserAchievement {
 // DEPOSIT TYPES
 // ============================================================================
 
-export type DepositChain = "ethereum" | "base" | "bnb" | "solana";
+export type DepositChain = "ethereum" | "base" | "polygon-amoy" | "bnb" | "solana-devnet";
 export type DepositToken = "usdc" | "usdt";
 
 export interface DepositChainInfo {

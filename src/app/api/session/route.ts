@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     const userKey = body.userId || body.email || 'anonymous'
 
     const strategy = process.env.DEPOSIT_ADDRESS_STRATEGY || 'first_signin_unique'
-    const supportedChains = (process.env.SUPPORTED_CHAINS || 'eip155:1,eip155:8453,eip155:56,eip155:137,solana:101')
+    const supportedChains = (process.env.SUPPORTED_CHAINS || 'eip155:1,eip155:84532,eip155:80002,eip155:137,solana:101')
         .split(',').map(s => s.trim()).filter(Boolean)
     const assets = (process.env.SUPPORTED_ASSETS || 'usdc,usdt').split(',').map(a => a.trim() as 'usdc' | 'usdt')
     const privy = getPrivyClient()

@@ -35,14 +35,17 @@ export function Header() {
   useEffect(() => {
     if (authenticated && user?.id && (!profile || profile.id !== user.id)) {
       loadUserData(user.id);
-      // Get wallet address from Privy user
-      const walletAddress = user?.wallet?.address || profile?.virtualAddress;
-      // Default to Ethereum mainnet (chainId: 1)
-      // In production, you may want to detect the active chain from the wallet provider
-      const chainId = '1';
-      loadWalletBalance(user.id, walletAddress, chainId);
     }
-  }, [authenticated, user?.id, user?.wallet?.address, loadUserData, loadWalletBalance, profile]);
+  }, [authenticated, user?.id, profile, loadUserData]);
+
+  // Load wallet balance when profile is available
+  useEffect(() => {
+    if (authenticated && profile?.virtualAddress) {
+      // Default to Base Sepolia testnet (chainId: 84532)
+      const chainId = '84532';
+      loadWalletBalance(profile.id, profile.virtualAddress, chainId);
+    }
+  }, [authenticated, profile?.virtualAddress, profile?.id, loadWalletBalance]);
 
   // Show generated deposit address from Privy, not the connected wallet
   const displayAddress = profile?.virtualAddress;

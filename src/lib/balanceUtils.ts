@@ -1,46 +1,5 @@
-import { ethers } from 'ethers';
-
-// ERC20 token contract addresses (mainnet)
-const TOKEN_ADDRESSES = {
-    // Ethereum Mainnet
-    '1': {
-        USDC: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-        USDT: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
-    },
-    // Base
-    '8453': {
-        USDC: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-        USDT: '0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2',
-    },
-    // BNB Chain
-    '56': {
-        USDC: '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d',
-        USDT: '0x55d398326f99059fF775485246999027B3197955',
-    },
-    // Polygon
-    '137': {
-        USDC: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359',
-        USDT: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
-    },
-};
-
-// ERC20 ABI for balanceOf
-const ERC20_ABI = [
-    {
-        constant: true,
-        inputs: [{ name: '_owner', type: 'address' }],
-        name: 'balanceOf',
-        outputs: [{ name: 'balance', type: 'uint256' }],
-        type: 'function',
-    },
-    {
-        constant: true,
-        inputs: [],
-        name: 'decimals',
-        outputs: [{ name: '', type: 'uint8' }],
-        type: 'function',
-    },
-];
+import { ethers, WebSocketProvider } from 'ethers';
+import { TOKEN_ADDRESSES, ERC20_BALANCE_ABI, getWebSocketRpcUrl } from './chainConstants';
 
 export interface TokenBalance {
     usdc: number;
@@ -60,22 +19,30 @@ export interface WalletBalanceData {
  */
 export async function fetchWalletBalance(
     address: string,
-    chainId: string = '1'
+    chainId: string = '84532' // Default to Base Sepolia testnet
 ): Promise<WalletBalanceData> {
+    // Note: Solana (chainId '101') uses a different protocol and cannot be fetched with ethers.js
+    // Solana requires @solana/web3.js library for balance fetching
+    if (chainId === '101') {
+        console.warn('Solana balance fetching not implemented with ethers.js');
+        // Return zero balance for Solana
+        return {
+            portfolio: 0,
+            cash: 0,
+            tokens: {
+                usdc: 0,
+                usdt: 0,
+            },
+        };
+    }
+
     if (!address || !ethers.isAddress(address)) {
         throw new Error('Invalid wallet address');
     }
 
-    // Create provider based on chainId - use public RPC endpoints
-    const providers: Record<string, string> = {
-        '1': 'https://eth.llamarpc.com', // Ethereum Mainnet
-        '8453': 'https://mainnet.base.org', // Base
-        '56': 'https://bsc-dataseed1.binance.org', // BNB Chain
-        '137': 'https://polygon-rpc.com', // Polygon
-    };
-
-    const rpcUrl = providers[chainId] || providers['1'];
-    const provider = new ethers.JsonRpcProvider(rpcUrl);
+    // Create provider based on chainId - use WebSocket RPC endpoints
+    const rpcUrl = getWebSocketRpcUrl(chainId);
+    const provider = new WebSocketProvider(rpcUrl);
 
     try {
         // Fetch native ETH balance
@@ -83,14 +50,14 @@ export async function fetchWalletBalance(
         const ethBalanceFormatted = parseFloat(ethers.formatEther(ethBalance));
 
         // Fetch USDC and USDT balances
-        const tokens = TOKEN_ADDRESSES[chainId as keyof typeof TOKEN_ADDRESSES] || TOKEN_ADDRESSES['1'];
+        const tokens = TOKEN_ADDRESSES[chainId as keyof typeof TOKEN_ADDRESSES] || TOKEN_ADDRESSES['84532'];
 
         let usdcBalance = 0;
         let usdtBalance = 0;
 
         if (tokens.USDC) {
             try {
-                const usdcContract = new ethers.Contract(tokens.USDC, ERC20_ABI, provider);
+                const usdcContract = new ethers.Contract(tokens.USDC, ERC20_BALANCE_ABI, provider);
                 const usdcRawBalance = await usdcContract.balanceOf(address);
                 const decimals = await usdcContract.decimals();
                 usdcBalance = parseFloat(ethers.formatUnits(usdcRawBalance, decimals));
@@ -101,7 +68,7 @@ export async function fetchWalletBalance(
 
         if (tokens.USDT) {
             try {
-                const usdtContract = new ethers.Contract(tokens.USDT, ERC20_ABI, provider);
+                const usdtContract = new ethers.Contract(tokens.USDT, ERC20_BALANCE_ABI, provider);
                 const usdtRawBalance = await usdtContract.balanceOf(address);
                 const decimals = await usdtContract.decimals();
                 usdtBalance = parseFloat(ethers.formatUnits(usdtRawBalance, decimals));
@@ -111,7 +78,7 @@ export async function fetchWalletBalance(
         }
 
         // Calculate portfolio value (simplified - in production, fetch token prices)
-        const ethPrice = 2500; // Mock ETH price - replace with actual price fetch
+        const ethPrice = 4500; // Mock ETH price - replace with actual price fetch
         const portfolioValue = (usdcBalance + usdtBalance) + (ethBalanceFormatted * ethPrice);
 
         return {
@@ -126,6 +93,11 @@ export async function fetchWalletBalance(
     } catch (error) {
         console.error('Error fetching wallet balance:', error);
         throw error;
+    } finally {
+        // Close WebSocket connection to prevent memory leaks
+        if (provider) {
+            provider.destroy();
+        }
     }
 }
 

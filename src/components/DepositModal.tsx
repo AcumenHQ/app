@@ -10,14 +10,29 @@ import { QRCodeSVG } from "qrcode.react";
 
 export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
     const { authenticated, user } = usePrivy();
-    const { profile, walletBalance } = useUserStore();
+    const { profile, walletBalance, loadWalletBalance } = useUserStore();
     const [isClosing, setIsClosing] = useState(false);
     const [step, setStep] = useState<"initial" | "transfer">("initial");
-    const [selectedChain, setSelectedChain] = useState<DepositChain | null>("bnb");
+    const [selectedChain, setSelectedChain] = useState<DepositChain | null>("base");
     const [selectedToken, setSelectedToken] = useState<DepositToken | null>("usdc");
     const [isTokenDropdownOpen, setIsTokenDropdownOpen] = useState(false);
     const [isChainDropdownOpen, setIsChainDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+
+    // Load balance when chain or token changes
+    useEffect(() => {
+        if (authenticated && selectedChain && profile?.virtualAddress) {
+            const chainIdMap: Record<string, string> = {
+                'ethereum': '11155111',
+                'base': '84532',
+                'polygon-amoy': '80002',
+                'bnb': '97',
+                'solana-devnet': '101',
+            };
+            const numericChainId = chainIdMap[selectedChain] || '84532';
+            loadWalletBalance(profile.id, profile.virtualAddress, numericChainId);
+        }
+    }, [authenticated, selectedChain, selectedToken, profile?.virtualAddress, profile?.id, loadWalletBalance]);
 
     // Close dropdowns when clicking outside
     useEffect(() => {
@@ -41,7 +56,7 @@ export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
         setTimeout(() => {
             setIsClosing(false);
             setStep("initial");
-            setSelectedChain("bnb");
+            setSelectedChain("base");
             setSelectedToken("usdc");
             setIsTokenDropdownOpen(false);
             setIsChainDropdownOpen(false);
@@ -66,13 +81,12 @@ export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
         const chainId = chain.chainId;
         const address = profile.depositAddresses[chainId]?.[selectedToken];
         // If token-specific address not found, try to use the chain's default EVM/Solana address
-        if (!address && selectedChain !== "solana") {
+        if (!address && selectedChain !== "solana-devnet") {
             // For EVM chains, use the default EVM address
             return profile.virtualAddress;
-        } else if (!address && selectedChain === "solana") {
-            // For Solana, we'd need a separate Solana address field
-            // For now, return null if not found
-            return null;
+        } else if (!address && selectedChain === "solana-devnet") {
+            // For Solana, use the separate Solana address field
+            return profile.solanaAddress;
         }
         return address;
     };
@@ -83,10 +97,9 @@ export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
         switch (chainId) {
             case "bnb":
                 return (
-                    <div className="w-6 h-6 rounded-full bg-yellow-500 flex items-center justify-center">
-                        <svg viewBox="0 0 32 32" className="w-4 h-4">
-                            <path d="M16 0l2.122 7.343L16 14.686l-2.122-7.343L16 0z" fill="#fff" />
-                            <path d="M22.628 3.372l-1.885 6.543-1.763-1.763-2.122 7.343-2.122-7.343-1.763 1.763-1.885-6.543h11.54z" fill="#fff" />
+                    <div className="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center">
+                        <svg viewBox="0 0 32 32" className="w-4 h-4 fill-white">
+                            <path d="M16 0l2.5 8.668L16 11.583l-2.5-2.915L16 0zM23.762 3.986l-2.223 7.691-2.08-2.08-2.5 8.668-2.5-8.668-2.08 2.08-2.223-7.691h11.606z" />
                         </svg>
                     </div>
                 );
@@ -105,7 +118,15 @@ export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
                         <span className="text-white font-bold text-xs">B</span>
                     </div>
                 );
-            case "solana":
+            case "polygon-amoy":
+                return (
+                    <div className="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center">
+                        <svg viewBox="0 0 32 32" className="w-4 h-4 fill-white">
+                            <path d="M16 0l2.5 8.668L16 11.583l-2.5-2.915L16 0zM23.762 3.986l-2.223 7.691-2.08-2.08-2.5 8.668-2.5-8.668-2.08 2.08-2.223-7.691h11.606z" />
+                        </svg>
+                    </div>
+                );
+            case "solana-devnet":
                 return (
                     <div className="w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center">
                         <span className="text-white font-bold text-xs">S</span>
@@ -148,7 +169,7 @@ export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
                             <button
                                 onClick={() => {
                                     setStep("initial");
-                                    setSelectedChain("bnb");
+                                    setSelectedChain("base");
                                     setSelectedToken("usdc");
                                     setIsTokenDropdownOpen(false);
                                     setIsChainDropdownOpen(false);
@@ -170,7 +191,7 @@ export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
                                 {step === "initial" ? "Deposit" : "Transfer Crypto"}
                             </h2>
                             <p className="text-sm text-muted-foreground mt-1">
-                                Polymarket Balance: ${walletBalance?.portfolio.toFixed(2) || "0.00"}
+                                Acumen Balance: ${walletBalance?.portfolio.toFixed(2) || "0.00"}
                             </p>
                         </div>
                         <button

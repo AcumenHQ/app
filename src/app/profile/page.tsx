@@ -18,14 +18,17 @@ export default function ProfilePage() {
   useEffect(() => {
     if (authenticated && user?.id && (!profile || profile.id !== user.id)) {
       loadUserData(user.id);
-      // Get wallet address from Privy user
-      const walletAddress = user?.wallet?.address || profile?.virtualAddress;
-      // Default to Ethereum mainnet (chainId: 1)
-      // In production, you may want to detect the active chain from the wallet provider
-      const chainId = '1';
-      loadWalletBalance(user.id, walletAddress, chainId);
     }
-  }, [authenticated, user?.id, user?.wallet?.address, profile, loadUserData, loadWalletBalance]);
+  }, [authenticated, user?.id, profile, loadUserData]);
+
+  // Load wallet balance when profile is available
+  useEffect(() => {
+    if (authenticated && profile?.virtualAddress) {
+      // Default to Base Sepolia testnet (chainId: 84532)
+      const chainId = '84532';
+      loadWalletBalance(profile.id, profile.virtualAddress, chainId);
+    }
+  }, [authenticated, profile?.virtualAddress, profile?.id, loadWalletBalance]);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -117,7 +120,7 @@ export default function ProfilePage() {
                 <div>MARKET</div>
                 <div className="text-right">VALUE</div>
               </div>
-              <div className="text-center text-muted-foreground py-10">You haven&apos;t traded any polymarkets yet</div>
+              <div className="text-center text-muted-foreground py-10">You haven&apos;t traded any Acumen yet</div>
             </div>
           )}
         </div>

@@ -18,7 +18,7 @@ A modern, decentralized prediction market platform built with Next.js, TypeScrip
 -  **Responsive Design**: Works seamlessly on desktop and mobile
 -  **Dark/Light Theme**: Toggle between themes with persistent preferences
 -  **Real-time Updates**: Live market data and price updates
--  **Interactive Cards**: Polymarket-style prediction cards with dynamic content
+-  **Interactive Cards**: Acumen-style prediction cards with dynamic content
 -  **Trading Modal**: Streamlined buy/sell interface
 -  **Collapsible Headers**: Optimized navigation with scroll-based UI changes
 
@@ -149,14 +149,18 @@ NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id_here
 NEXT_PUBLIC_API_URL=http://localhost:8000
 
 # Privy (replace with your real keys when enabled)
-PRIVY_APP_ID=
-PRIVY_APP_SECRET=
+NEXT_PUBLIC_PRIVY_APP_ID=your_privy_app_id
+NEXT_PUBLIC_PRIVY_CLIENT_ID=your_privy_client_id
+PRIVY_APP_SECRET=your_privy_app_secret
+
+# Alchemy API Key for RPC endpoints (get from https://www.alchemy.com/)
+NEXT_PUBLIC_ALCHEMY_API_KEY=your_alchemy_api_key
 
 # Each user gets a unique generated deposit address on first sign-in
 DEPOSIT_ADDRESS_STRATEGY=first_signin_unique
 
-# Supported multichain config (CAIP-2 chain ids)
-SUPPORTED_CHAINS=eip155:1,eip155:8453,eip155:56,eip155:137,solana:101
+# Supported multichain config (CAIP-2 chain ids) - now includes testnets
+SUPPORTED_CHAINS=eip155:1,eip155:84532,eip155:80002,eip155:137,eip155:97,solana:101
 SUPPORTED_ASSETS=usdc,usdt
 ```
 
@@ -231,8 +235,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 -  [Next.js](https://nextjs.org/) for the amazing React framework
 -  [Tailwind CSS](https://tailwindcss.com/) for the utility-first CSS framework
 -  [Zustand](https://zustand-demo.pmnd.rs/) for lightweight state management
--  [Reown](https://reown.com/) for Web3 wallet integration
--  [Polymarket](https://polymarket.com/) for design inspiration
 
 ---
 

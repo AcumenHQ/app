@@ -1,28 +1,53 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { usePrivy } from "@privy-io/react-auth";
+import { usePrivy, useWallets, useSendTransaction } from "@privy-io/react-auth";
 import { useUserStore } from "@/stores/userStore";
 import type { WithdrawModalProps, DepositChain, DepositToken } from "@/types/types";
 import { DEPOSIT_CHAINS, DEPOSIT_TOKENS } from "@/lib/depositConstants";
+import { TransactionSuccessModal } from "@/components/TransactionSuccessModal";
+import { TOKEN_ADDRESSES, ERC20_TRANSFER_ABI, ERC20_BALANCE_ABI, getWebSocketRpcUrl } from "@/lib/chainConstants";
+import { ethers, WebSocketProvider } from 'ethers';
 
 export const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
-    const { authenticated } = usePrivy();
-    const { walletBalance } = useUserStore();
+    const { authenticated, user } = usePrivy();
+    const { wallets } = useWallets();
+    const { sendTransaction } = useSendTransaction();
+    const { walletBalance, profile, loadWalletBalance } = useUserStore();
     const [isClosing, setIsClosing] = useState(false);
     const [amount, setAmount] = useState("");
-    const [selectedChain, setSelectedChain] = useState<DepositChain | null>("bnb");
+    const [selectedChain, setSelectedChain] = useState<DepositChain | null>("base");
     const [selectedToken, setSelectedToken] = useState<DepositToken | null>("usdc");
     const [isChainDropdownOpen, setIsChainDropdownOpen] = useState(false);
+    const [isTokenDropdownOpen, setIsTokenDropdownOpen] = useState(false);
     const [withdrawAddress, setWithdrawAddress] = useState("");
     const [isWithdrawing, setIsWithdrawing] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [txHash, setTxHash] = useState("");
+    const [chainId, setChainId] = useState("");
     const dropdownRef = useRef<HTMLDivElement>(null);
+
+    // Load balance when chain or token changes
+    useEffect(() => {
+        if (authenticated && selectedChain && profile?.virtualAddress) {
+            const chainIdMap: Record<string, string> = {
+                'ethereum': '11155111',
+                'base': '84532',
+                'polygon-amoy': '80002',
+                'bnb': '97',
+                'solana-devnet': '101',
+            };
+            const numericChainId = chainIdMap[selectedChain] || '84532';
+            loadWalletBalance(profile.id, profile.virtualAddress, numericChainId);
+        }
+    }, [authenticated, selectedChain, selectedToken, profile?.virtualAddress, profile?.id, loadWalletBalance]);
 
     // Close dropdowns when clicking outside
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
                 setIsChainDropdownOpen(false);
+                setIsTokenDropdownOpen(false);
             }
         };
 
@@ -35,16 +60,28 @@ export const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
     if (!isOpen) return null;
 
     const handleClose = () => {
+        if (showSuccessModal) {
+            setShowSuccessModal(false);
+            return;
+        }
         setIsClosing(true);
         setTimeout(() => {
             setIsClosing(false);
             setAmount("");
             setWithdrawAddress("");
-            setSelectedChain("bnb");
+            setSelectedChain("base");
             setSelectedToken("usdc");
             setIsChainDropdownOpen(false);
+            setIsTokenDropdownOpen(false);
             onClose();
         }, 200);
+    };
+
+    const handleUseConnectedWallet = () => {
+        const connectedAddress = user?.wallet?.address;
+        if (connectedAddress) {
+            setWithdrawAddress(connectedAddress);
+        }
     };
 
     const handleBackdropClick = (e: React.MouseEvent) => {
@@ -55,28 +92,92 @@ export const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
 
     const handleWithdraw = async () => {
         if (!amount || parseFloat(amount) <= 0) {
-            alert("Please enter a valid amount");
             return;
         }
-        if (!withdrawAddress || !withdrawAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
-            alert("Please enter a valid wallet address");
-            return;
-        }
-        if (!selectedChain || !selectedToken) {
-            alert("Please select a chain and token");
+        // Validate address based on chain
+        const isEvmChain = selectedChain && selectedChain !== "solana-devnet";
+        const evmAddressRegex = /^0x[a-fA-F0-9]{40}$/;
+        const solanaAddressRegex = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+        const isValidAddress = isEvmChain
+            ? withdrawAddress.match(evmAddressRegex)
+            : withdrawAddress.match(solanaAddressRegex);
+
+        if (!withdrawAddress || !isValidAddress || !selectedChain || !selectedToken) {
             return;
         }
 
         setIsWithdrawing(true);
         try {
-            // TODO: Implement actual withdrawal logic
-            await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API call
-            alert(`Withdrawal of ${amount} ${selectedToken.toUpperCase()} to ${withdrawAddress} initiated`);
-            handleClose();
+            // Map selected chain to chain ID
+            const chainIdMap: Record<string, string> = {
+                'ethereum': '11155111',
+                'base': '84532',
+                'polygon-amoy': '80002',
+                'bnb': '97',
+            };
+            const numericChainId = chainIdMap[selectedChain] || '84532';
+
+            // Find embedded wallet
+            const embeddedWallet = wallets.find(w => w.walletClientType === 'privy');
+            if (!embeddedWallet) {
+                throw new Error('No embedded wallet found');
+            }
+
+            // Switch to correct chain if needed
+            const chainIdNumber = parseInt(numericChainId, 10);
+            try {
+                await embeddedWallet.switchChain(chainIdNumber);
+            } catch (switchError) {
+                console.warn('Chain switch error (may already be on correct chain):', switchError);
+            }
+
+            // Get token contract address
+            const tokenAddress = TOKEN_ADDRESSES[numericChainId as keyof typeof TOKEN_ADDRESSES]?.[selectedToken.toUpperCase() as 'USDC' | 'USDT'];
+            if (!tokenAddress) {
+                throw new Error(`Token ${selectedToken} not supported on chain ${numericChainId}`);
+            }
+
+            // Get token decimals from contract
+            const rpcUrl = getWebSocketRpcUrl(numericChainId);
+            const provider = new WebSocketProvider(rpcUrl);
+            const tokenContract = new ethers.Contract(tokenAddress, ERC20_BALANCE_ABI, provider);
+            const decimalsResult = await tokenContract.decimals();
+            // Convert BigInt to number if needed
+            const decimals = typeof decimalsResult === 'bigint' ? Number(decimalsResult) : decimalsResult;
+            provider.destroy(); // Clean up WebSocket connection
+
+            // Create contract interface for encoding
+            const iface = new ethers.Interface(ERC20_TRANSFER_ABI);
+
+            // Encode amount with correct decimals using ethers.parseUnits which handles decimals properly
+            const amountInWei = ethers.parseUnits(amount, decimals);
+
+            // Encode the transfer function call
+            const data = iface.encodeFunctionData('transfer', [withdrawAddress, amountInWei]);
+
+            // Send transaction using Privy - value is 0 for token transfers (only contract call)
+            const response = await sendTransaction({
+                to: tokenAddress,
+                data: data,
+                value: '0x0', // Token transfers don't send ETH, just call contract
+            }, {
+                address: embeddedWallet.address,
+            });
+
+            setTxHash(response.hash);
+            setChainId(numericChainId);
+            setShowSuccessModal(true);
+            setIsWithdrawing(false);
+
+            // Reload balance after a short delay
+            if (profile?.virtualAddress) {
+                setTimeout(() => {
+                    loadWalletBalance(profile.id, profile.virtualAddress, numericChainId);
+                }, 3000);
+            }
         } catch (error) {
             console.error("Withdrawal failed:", error);
-            alert("Withdrawal failed. Please try again.");
-        } finally {
+            alert(error instanceof Error ? error.message : "Withdrawal failed. Please try again.");
             setIsWithdrawing(false);
         }
     };
@@ -85,10 +186,9 @@ export const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
         switch (chainId) {
             case "bnb":
                 return (
-                    <div className="w-6 h-6 rounded-full bg-yellow-500 flex items-center justify-center">
-                        <svg viewBox="0 0 32 32" className="w-4 h-4">
-                            <path d="M16 0l2.122 7.343L16 14.686l-2.122-7.343L16 0z" fill="#fff" />
-                            <path d="M22.628 3.372l-1.885 6.543-1.763-1.763-2.122 7.343-2.122-7.343-1.763 1.763-1.885-6.543h11.54z" fill="#fff" />
+                    <div className="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center">
+                        <svg viewBox="0 0 32 32" className="w-4 h-4 fill-white">
+                            <path d="M16 0l2.5 8.668L16 11.583l-2.5-2.915L16 0zM23.762 3.986l-2.223 7.691-2.08-2.08-2.5 8.668-2.5-8.668-2.08 2.08-2.223-7.691h11.606z" />
                         </svg>
                     </div>
                 );
@@ -107,7 +207,15 @@ export const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
                         <span className="text-white font-bold text-xs">B</span>
                     </div>
                 );
-            case "solana":
+            case "polygon-amoy":
+                return (
+                    <div className="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center">
+                        <svg viewBox="0 0 32 32" className="w-4 h-4 fill-white">
+                            <path d="M16 0l2.5 8.668L16 11.583l-2.5-2.915L16 0zM23.762 3.986l-2.223 7.691-2.08-2.08-2.5 8.668-2.5-8.668-2.08 2.08-2.223-7.691h11.606z" />
+                        </svg>
+                    </div>
+                );
+            case "solana-devnet":
                 return (
                     <div className="w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center">
                         <span className="text-white font-bold text-xs">S</span>
@@ -226,41 +334,62 @@ export const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
 
                             {/* Token and Chain Selection */}
                             <div className="grid grid-cols-2 gap-4" ref={dropdownRef}>
-                                {/* Token Selection */}
-                                <div>
-                                    <label className="text-sm font-medium text-card-foreground mb-2 block">
-                                        Token
-                                    </label>
-                                    <div className="flex gap-2">
-                                        {DEPOSIT_TOKENS.map((token) => (
-                                            <button
-                                                key={token.id}
-                                                onClick={() => {
-                                                    setSelectedToken(token.id);
-                                                    setAmount("");
-                                                }}
-                                                className={`flex-1 flex items-center justify-center gap-2 p-3 border rounded-lg transition-colors cursor-pointer ${selectedToken === token.id
-                                                    ? "border-primary bg-primary/10"
-                                                    : "border-border hover:bg-muted"
-                                                    }`}
-                                            >
-                                                {getTokenIcon(token.id)}
-                                                <span className="font-medium text-card-foreground text-sm">
-                                                    {token.symbol}
-                                                </span>
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* Chain Selection */}
+                                {/* Supported Token */}
                                 <div className="relative">
                                     <label className="text-sm font-medium text-card-foreground mb-2 block">
-                                        Chain
+                                        Supported token
+                                    </label>
+                                    <button
+                                        onClick={() => {
+                                            setIsTokenDropdownOpen(!isTokenDropdownOpen);
+                                            setIsChainDropdownOpen(false);
+                                        }}
+                                        className="w-full flex items-center justify-between p-3 bg-muted border border-border rounded-lg hover:bg-muted/80 transition-colors cursor-pointer"
+                                    >
+                                        <div className="flex items-center space-x-2">
+                                            {selectedToken && getTokenIcon(selectedToken)}
+                                            <span className="font-medium text-card-foreground">
+                                                {DEPOSIT_TOKENS.find(t => t.id === selectedToken)?.symbol}
+                                            </span>
+                                        </div>
+                                        <svg
+                                            className={`w-4 h-4 text-muted-foreground transition-transform ${isTokenDropdownOpen ? "rotate-180" : ""}`}
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+                                    {isTokenDropdownOpen && (
+                                        <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-lg shadow-lg">
+                                            {DEPOSIT_TOKENS.map((token) => (
+                                                <button
+                                                    key={token.id}
+                                                    onClick={() => {
+                                                        setSelectedToken(token.id);
+                                                        setAmount("");
+                                                        setIsTokenDropdownOpen(false);
+                                                    }}
+                                                    className="w-full flex items-center space-x-2 p-3 hover:bg-muted transition-colors cursor-pointer"
+                                                >
+                                                    {getTokenIcon(token.id)}
+                                                    <span className="font-medium text-card-foreground">{token.symbol}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Supported Chain */}
+                                <div className="relative">
+                                    <label className="text-sm font-medium text-card-foreground mb-2 block">
+                                        Supported chain
                                     </label>
                                     <button
                                         onClick={() => {
                                             setIsChainDropdownOpen(!isChainDropdownOpen);
+                                            setIsTokenDropdownOpen(false);
                                         }}
                                         className="w-full flex items-center justify-between p-3 bg-muted border border-border rounded-lg hover:bg-muted/80 transition-colors cursor-pointer"
                                     >
@@ -301,14 +430,24 @@ export const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
 
                             {/* Withdrawal Address */}
                             <div>
-                                <label className="text-sm font-medium text-card-foreground mb-2 block">
-                                    Withdrawal Address
-                                </label>
+                                <div className="flex items-center justify-between mb-2">
+                                    <label className="text-sm font-medium text-card-foreground">
+                                        Withdrawal Address
+                                    </label>
+                                    {user?.wallet?.address && (
+                                        <button
+                                            onClick={handleUseConnectedWallet}
+                                            className="text-xs text-primary hover:underline cursor-pointer"
+                                        >
+                                            Use connected wallet
+                                        </button>
+                                    )}
+                                </div>
                                 <input
                                     type="text"
                                     value={withdrawAddress}
                                     onChange={(e) => setWithdrawAddress(e.target.value)}
-                                    placeholder="0x..."
+                                    placeholder={selectedChain === "solana-devnet" ? "Enter Solana address..." : "0x..."}
                                     className="w-full p-3 bg-muted border border-border rounded-lg text-card-foreground font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                                 />
                                 <p className="text-xs text-muted-foreground mt-1">
@@ -335,6 +474,19 @@ export const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
                     )}
                 </div>
             </div>
+
+            {/* Success Modal */}
+            <TransactionSuccessModal
+                isOpen={showSuccessModal}
+                onClose={() => {
+                    setShowSuccessModal(false);
+                    handleClose();
+                }}
+                txHash={txHash}
+                chainId={chainId}
+                amount={amount}
+                token={selectedToken || "usdc"}
+            />
         </div>
     );
 };

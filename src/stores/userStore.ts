@@ -187,6 +187,7 @@ export const useUserStore = create<UserState>()(
                 try {
                     let depositAddresses: Record<string, { usdc?: string; usdt?: string }> | undefined
                     let defaultEvmAddress: string | undefined
+                    let defaultSolAddress: string | undefined
                     try {
                         const res = await fetch(`/api/session`, {
                             method: 'POST',
@@ -197,6 +198,7 @@ export const useUserStore = create<UserState>()(
                             const data = await res.json()
                             depositAddresses = data?.depositAddresses
                             defaultEvmAddress = data?.defaultEvmAddress
+                            defaultSolAddress = data?.defaultSolAddress
                         } else {
                             const errorText = await res.text()
                             console.error('Failed to fetch deposit addresses:', res.status, errorText)
@@ -209,8 +211,8 @@ export const useUserStore = create<UserState>()(
                         const fallback = generateVirtualAddressFor(userId)
                         depositAddresses = {
                             'eip155:1': { usdc: fallback, usdt: fallback },
-                            'eip155:8453': { usdc: fallback, usdt: fallback },
-                            'eip155:56': { usdc: fallback, usdt: fallback },
+                            'eip155:84532': { usdc: fallback, usdt: fallback }, // Base Sepolia
+                            'eip155:80002': { usdc: fallback, usdt: fallback }, // Polygon Amoy
                             'eip155:137': { usdc: fallback, usdt: fallback },
                             'solana:101': { usdc: fallback, usdt: fallback },
                         }
@@ -222,6 +224,7 @@ export const useUserStore = create<UserState>()(
                         id: userId,
                         address: userId,
                         virtualAddress: defaultEvmAddress,
+                        solanaAddress: defaultSolAddress,
                         depositAddresses,
                         username: `user_${userId.slice(0, 6)}`,
                         displayName: 'Anonymous Trader',
@@ -257,12 +260,12 @@ export const useUserStore = create<UserState>()(
 
                     // Load wallet balance
                     const mockBalance: WalletBalance = {
-                        portfolio: 1250.50,
-                        cash: 850.25,
+                        portfolio: 0.00,
+                        cash: 0.00,
                         tokens: {
-                            usdc: 850.25,
+                            usdc: 0.00,
                             usdt: 0,
-                            eth: 0.15,
+                            eth: 0,
                             sol: 0
                         }
                     }
