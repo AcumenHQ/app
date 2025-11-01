@@ -7,7 +7,7 @@ import { CopyAddress } from "@/components/CopyAddress";
 import Link from "next/link";
 
 export default function AccountSettingsPage() {
-  const { profile, walletBalance, isLoadingProfile, updateProfile, loadWalletBalance } = useUserStore();
+  const { profile, walletBalance, isLoadingProfile, updateProfile, loadUserData, loadWalletBalance } = useUserStore();
   const { authenticated, user } = usePrivy();
   const address = user?.wallet?.address || profile?.virtualAddress;
   const isConnected = authenticated;
@@ -17,16 +17,21 @@ export default function AccountSettingsPage() {
     "profile" | "email" | "password" | "wallet"
   >("profile");
 
-  // Load wallet balance when authenticated
+  // Load user data when authenticated
   useEffect(() => {
-    if (authenticated && user?.id) {
-      const walletAddress = user?.wallet?.address || profile?.virtualAddress;
-      // Default to Ethereum mainnet (chainId: 1)
-      // In production, you may want to detect the active chain from the wallet provider
-      const chainId = '1';
-      loadWalletBalance(user.id, walletAddress, chainId);
+    if (authenticated && user?.id && (!profile || profile.id !== user.id)) {
+      loadUserData(user.id);
     }
-  }, [authenticated, user?.id, user?.wallet?.address, profile?.virtualAddress, loadWalletBalance]);
+  }, [authenticated, user?.id, profile, loadUserData]);
+
+  // Load wallet balance when profile is available
+  useEffect(() => {
+    if (authenticated && profile?.virtualAddress) {
+      // Default to Base Sepolia testnet (chainId: 84532)
+      const chainId = '84532';
+      loadWalletBalance(profile.id, profile.virtualAddress, chainId);
+    }
+  }, [authenticated, profile?.virtualAddress, profile?.id, loadWalletBalance]);
 
   // Form states
   const [profileForm, setProfileForm] = useState({
@@ -113,7 +118,7 @@ export default function AccountSettingsPage() {
 
   if (isLoadingProfile) {
     return (
-      <div className="min-h-screen bg-background text-foreground">
+      <div className="bg-background text-foreground">
         <div className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-6 sm:py-8 pt-20 sm:pt-24">
           <div className="flex justify-center items-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -124,7 +129,7 @@ export default function AccountSettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="bg-background text-foreground">
       <div className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-6 sm:py-8 pt-20 sm:pt-24">
         {/* Header */}
         <div className="mb-8">
@@ -664,11 +669,11 @@ export default function AccountSettingsPage() {
                   </div>
                 </form>
 
-                <div className="mt-8 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                  <h3 className="font-medium text-yellow-800 dark:text-yellow-200 mb-2">
+                <div className="mt-8 p-4 bg-muted/50 border border-border rounded-lg">
+                  <h3 className="font-medium text-card-foreground mb-2">
                     Password Requirements
                   </h3>
-                  <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+                  <ul className="text-sm text-muted-foreground space-y-1">
                     <li>• At least 8 characters long</li>
                     <li>• Include uppercase and lowercase letters</li>
                     <li>• Include at least one number</li>

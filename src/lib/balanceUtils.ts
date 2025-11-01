@@ -1,5 +1,6 @@
 import { ethers, WebSocketProvider } from 'ethers';
 import { TOKEN_ADDRESSES, ERC20_BALANCE_ABI, getWebSocketRpcUrl } from './chainConstants';
+import { fetchEthPrice } from './index';
 
 export interface TokenBalance {
     usdc: number;
@@ -81,8 +82,8 @@ export async function fetchWalletBalance(
             }
         }
 
-        // Calculate portfolio value (simplified - in production, fetch token prices)
-        const ethPrice = 4500; // Mock ETH price - replace with actual price fetch
+        // Calculate portfolio value with real ETH price
+        const ethPrice = await fetchEthPrice();
         const portfolioValue = (usdcBalance + usdtBalance) + (ethBalanceFormatted * ethPrice);
 
         return {

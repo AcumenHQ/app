@@ -31,7 +31,7 @@ export default function ProfilePage() {
   }, [authenticated, profile?.virtualAddress, profile?.id, loadWalletBalance]);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="bg-background text-foreground">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-6 sm:py-8 pt-24">
         {/* Top cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
