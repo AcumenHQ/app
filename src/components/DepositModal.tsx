@@ -20,7 +20,7 @@ export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
     const [copied, setCopied] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    // Load balance when chain or token changes
+    // Load balance when chain changes (not token, since we fetch both USDC and USDT together)
     useEffect(() => {
         if (authenticated && selectedChain && profile?.virtualAddress) {
             const chainIdMap: Record<string, string> = {
@@ -33,7 +33,8 @@ export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
             const numericChainId = chainIdMap[selectedChain] || '84532';
             loadWalletBalance(profile.id, profile.virtualAddress, numericChainId);
         }
-    }, [authenticated, selectedChain, selectedToken, profile?.virtualAddress, profile?.id, loadWalletBalance]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [authenticated, selectedChain, profile?.virtualAddress, profile?.id]);
 
     // Close dropdowns when clicking outside
     useEffect(() => {
@@ -193,7 +194,7 @@ export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
                                 {step === "initial" ? "Deposit" : "Transfer Crypto"}
                             </h2>
                             <p className="text-sm text-muted-foreground mt-1">
-                                Acumen Balance: ${walletBalance?.portfolio.toFixed(2) || "0.00"}
+                                Available: ${selectedToken && walletBalance?.tokens[selectedToken] ? walletBalance.tokens[selectedToken].toFixed(2) : "0.00"} {selectedToken ? selectedToken.toUpperCase() : ""}
                             </p>
                         </div>
                         <button

@@ -27,7 +27,7 @@ export const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
     const [chainId, setChainId] = useState("");
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    // Load balance when chain or token changes
+    // Load balance when chain changes (not token, since we fetch both USDC and USDT together)
     useEffect(() => {
         if (authenticated && selectedChain && profile?.virtualAddress) {
             const chainIdMap: Record<string, string> = {
@@ -40,7 +40,8 @@ export const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
             const numericChainId = chainIdMap[selectedChain] || '84532';
             loadWalletBalance(profile.id, profile.virtualAddress, numericChainId);
         }
-    }, [authenticated, selectedChain, selectedToken, profile?.virtualAddress, profile?.id, loadWalletBalance]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [authenticated, selectedChain, profile?.virtualAddress, profile?.id]);
 
     // Close dropdowns when clicking outside
     useEffect(() => {

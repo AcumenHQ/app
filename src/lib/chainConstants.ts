@@ -16,7 +16,7 @@ export const TOKEN_ADDRESSES = {
     },
     // Polygon Amoy (testnet)
     '80002': {
-        USDC: '0x41e94eb019c0762f9BFcf9Fb1E58725BfB0e7582',
+        USDC: '0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582',
         USDT: '0x6c5131734e5c40A504c18c26Fa96F8eBdbb0fF30',
     },
     // Solana Devnet - Note: Solana uses SPL tokens, not ERC20
@@ -70,7 +70,7 @@ export const ERC20_TRANSFER_ABI = [
     ERC20_ABI_FRAGMENTS.transfer,
     ERC20_ABI_FRAGMENTS.decimals,
 ];
-const alchemyApiKey = process.env.NEXT_PUBLIC_ALCHEMY_API_KEY || 'VaINEXPAY0CJDQshulDHj';
+const alchemyApiKey = process.env.NEXT_PUBLIC_ALCHEMY_API_KEY || '';
 
 // HTTP RPC URLs for different chains
 export const RPC_URLS: Record<string, string> = {
