@@ -258,24 +258,12 @@ export const useUserStore = create<UserState>()(
                         percentile: 0,
                     }
 
-                    // Load wallet balance
-                    const mockBalance: WalletBalance = {
-                        portfolio: 0.00,
-                        cash: 0.00,
-                        tokens: {
-                            usdc: 0.00,
-                            usdt: 0,
-                            eth: 0,
-                            sol: 0
-                        }
-                    }
-
                     set({
                         profile: mockProfile,
                         stats: mockStats,
-                        walletBalance: mockBalance,
                         isLoadingProfile: false,
                         isLoadingStats: false,
+                        // Don't overwrite walletBalance here - it will be loaded by Header/Profile useEffect
                     })
                 } catch (error) {
                     set({
@@ -297,6 +285,7 @@ export const useUserStore = create<UserState>()(
                         const mockBalance: WalletBalance = {
                             portfolio: 0,
                             cash: 0,
+                            chains: {},
                             tokens: {
                                 usdc: 0,
                                 usdt: 0,
@@ -310,14 +299,60 @@ export const useUserStore = create<UserState>()(
 
                     // Use ethers.js to fetch real balances (client-side only)
                     if (typeof window !== 'undefined') {
+                        const currentBalance = get().walletBalance;
                         const { fetchWalletBalance } = await import('@/lib/balanceUtils')
-                        const balance = await fetchWalletBalance(address, chainId)
-                        set({ walletBalance: balance, isLoadingBalance: false })
+                        const { fetchEthPrice, fetchMaticPrice } = await import('@/lib/index')
+                        const newBalance = await fetchWalletBalance(address, chainId)
+
+                        // Merge new chain balance with existing balances
+                        const updatedChains = {
+                            ...(currentBalance?.chains || {}),
+                            [chainId]: newBalance.chains[chainId]
+                        }
+
+                        // Recalculate totals from all chains with correct native token prices
+                        let totalPortfolio = 0;
+                        let totalCash = 0;
+                        let ethPrice = 3000; // default fallback
+                        let maticPrice = 0.67; // default fallback
+
+                        try {
+                            ethPrice = await fetchEthPrice();
+                            maticPrice = await fetchMaticPrice();
+                        } catch (error) {
+                            console.error('Error fetching token prices for totals:', error);
+                        }
+
+                        Object.entries(updatedChains).forEach(([chainId, chain]) => {
+                            totalCash += (chain.usdc + chain.usdt);
+                            // Add native token value with correct price
+                            if (chain.native) {
+                                const isPolygon = chainId === '80002';
+                                totalPortfolio += (chain.native * (isPolygon ? maticPrice : ethPrice));
+                            }
+                        });
+                        totalPortfolio += totalCash;
+
+                        const mergedBalance: WalletBalance = {
+                            portfolio: totalPortfolio,
+                            cash: totalCash,
+                            chains: updatedChains,
+                            // Aggregate legacy tokens from all chains
+                            tokens: {
+                                usdc: Object.values(updatedChains).reduce((sum, c) => sum + (c.usdc || 0), 0),
+                                usdt: Object.values(updatedChains).reduce((sum, c) => sum + (c.usdt || 0), 0),
+                                eth: Object.values(updatedChains).reduce((sum, c) => sum + (c.native || 0), 0),
+                                sol: Object.values(updatedChains).reduce((sum, c) => sum + (c.sol || 0), 0),
+                            }
+                        }
+
+                        set({ walletBalance: mergedBalance, isLoadingBalance: false })
                     } else {
                         // Server-side fallback
                         const mockBalance: WalletBalance = {
                             portfolio: 0,
                             cash: 0,
+                            chains: {},
                             tokens: {
                                 usdc: 0,
                                 usdt: 0,
@@ -330,10 +365,12 @@ export const useUserStore = create<UserState>()(
                 } catch (error) {
                     console.error('Error loading wallet balance:', error)
                     // Fallback to zero balance on error
+                    const currentBalance = get().walletBalance;
                     const fallbackBalance: WalletBalance = {
-                        portfolio: 0,
-                        cash: 0,
-                        tokens: {
+                        portfolio: currentBalance?.portfolio || 0,
+                        cash: currentBalance?.cash || 0,
+                        chains: currentBalance?.chains || {},
+                        tokens: currentBalance?.tokens || {
                             usdc: 0,
                             usdt: 0,
                             eth: 0,

@@ -1,11 +1,12 @@
 import type { DepositChainInfo, DepositTokenInfo } from "@/types/types";
+import { CHAIN_NAMES, EIP155_CHAIN_IDS, CHAIN_IDS } from "@/config";
 
 export const DEPOSIT_CHAINS: DepositChainInfo[] = [
-    { id: "ethereum", name: "Ethereum", chainId: "eip155:1" },
-    { id: "base", name: "Base Sepolia", chainId: "eip155:84532" },
-    { id: "polygon-amoy", name: "Polygon Amoy", chainId: "eip155:80002" },
-    { id: "bnb", name: "Bnb Chain Testnet", chainId: "eip155:97" },
-    { id: "solana-devnet", name: "Solana Devnet", chainId: "solana:101" },
+    { id: "ethereum", name: CHAIN_NAMES[CHAIN_IDS.ETHEREUM_SEPOLIA], chainId: EIP155_CHAIN_IDS.ETHEREUM_SEPOLIA },
+    { id: "base", name: CHAIN_NAMES[CHAIN_IDS.BASE_SEPOLIA], chainId: EIP155_CHAIN_IDS.BASE_SEPOLIA },
+    { id: "polygon-amoy", name: CHAIN_NAMES[CHAIN_IDS.POLYGON_AMOY], chainId: EIP155_CHAIN_IDS.POLYGON_AMOY },
+    { id: "bnb", name: CHAIN_NAMES[CHAIN_IDS.BNB_TESTNET], chainId: EIP155_CHAIN_IDS.BNB_TESTNET },
+    { id: "solana-devnet", name: CHAIN_NAMES[CHAIN_IDS.SOLANA_DEVNET], chainId: EIP155_CHAIN_IDS.SOLANA_DEVNET },
 ];
 
 export const DEPOSIT_TOKENS: DepositTokenInfo[] = [

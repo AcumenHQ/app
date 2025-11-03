@@ -1,8 +1,8 @@
 import { ethers } from 'ethers';
-import { TOKEN_ADDRESSES, ERC20_TRANSFER_ABI, getExplorerUrl as getExplorerUrlFromConstants } from './chainConstants';
+import { TOKEN_ADDRESSES, ERC20_TRANSFER_ABI, getExplorerUrl } from '@/config';
 
 // Re-export for backward compatibility
-export { getExplorerUrlFromConstants as getExplorerUrl };
+export { getExplorerUrl };
 
 /**
  * Send ERC20 token transfer transaction

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getPrivyClient } from '@/lib/privy'
+import { SUPPORTED_TOKENS_ARRAY } from '@/config';
 
 interface LinkedAccount {
     type: string;
@@ -14,9 +15,10 @@ export async function POST(request: Request) {
     const userKey = body.userId || body.email || 'anonymous'
 
     const strategy = process.env.DEPOSIT_ADDRESS_STRATEGY || 'first_signin_unique'
-    const supportedChains = (process.env.SUPPORTED_CHAINS || 'eip155:1,eip155:84532,eip155:80002,eip155:137,solana:101')
+    const supportedChains = (process.env.SUPPORTED_CHAINS || 'eip155:1,eip155:84532,eip155:80002,eip155:137,solana:101') // for testnet
         .split(',').map(s => s.trim()).filter(Boolean)
-    const assets = (process.env.SUPPORTED_ASSETS || 'usdc,usdt').split(',').map(a => a.trim() as 'usdc' | 'usdt')
+
+    const assets = SUPPORTED_TOKENS_ARRAY;
     const privy = getPrivyClient()
 
     let user = null;
@@ -71,7 +73,7 @@ export async function POST(request: Request) {
         solAddress = djb2Hex(`${userKey}:sol`)
     }
 
-    const depositAddresses: Record<string, { usdc?: string; usdt?: string }> = {}
+    const depositAddresses: Record<string, { [key in typeof assets[number]]: string }> = {}
     for (const chain of supportedChains) {
         const isSol = chain.startsWith('solana:')
         const addr = isSol ? solAddress : evmAddress

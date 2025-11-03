@@ -10,6 +10,9 @@ export default function Home() {
     isLoadingPredictions,
     loadDemoData,
     getFilteredPredictions,
+    searchQuery,
+    selectedCategory,
+    sortBy,
   } = usePredictionStore();
 
   const [filteredPredictions, setFilteredPredictions] = useState(predictions);
@@ -23,7 +26,7 @@ export default function Home() {
   useEffect(() => {
     const filtered = getFilteredPredictions();
     setFilteredPredictions(filtered);
-  }, [predictions, getFilteredPredictions]);
+  }, [predictions, searchQuery, selectedCategory, sortBy, getFilteredPredictions]);
 
   return (
     <div className="min-h-screen bg-background text-foreground">

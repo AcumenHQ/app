@@ -77,3 +77,47 @@ export async function fetchTokenPrices(tokenIds: string[]): Promise<Record<strin
     }
 }
 
+/**
+ * Fetch MATIC (Polygon) price from CoinGecko API
+ * @returns Promise<number> MATIC price in USD
+ */
+export async function fetchMaticPrice(): Promise<number> {
+    try {
+        const response = await fetch(
+            'https://api.coingecko.com/api/v3/simple/price?ids=matic-network&vs_currencies=usd',
+            {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                },
+            }
+        );
+
+        if (!response.ok) {
+            console.warn(`CoinGecko API error: ${response.status} ${response.statusText}`);
+            return 0.67; // Return fallback instead of throwing
+        }
+
+        const data = await response.json();
+
+        // Check if CoinGecko returned an error status object
+        if (data?.status) {
+            console.warn('CoinGecko API rate limit or error:', data.status);
+            return 0.67; // Return fallback instead of throwing
+        }
+
+        const maticPrice = data?.['matic-network']?.usd;
+
+        if (!maticPrice || typeof maticPrice !== 'number') {
+            console.warn('Invalid MATIC price data, using fallback');
+            return 0.67; // Return fallback instead of throwing
+        }
+
+        return maticPrice;
+    } catch (error) {
+        console.error('Error fetching MATIC price:', error);
+        // Fallback to a reasonable default price if API fails
+        return 0.67;
+    }
+}
+

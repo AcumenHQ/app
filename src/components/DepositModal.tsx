@@ -6,6 +6,7 @@ import { useUserStore } from "@/stores/userStore";
 import { CopyAddress } from "@/components/CopyAddress";
 import type { DepositModalProps, DepositChain, DepositToken } from "@/types/types";
 import { DEPOSIT_CHAINS, DEPOSIT_TOKENS } from "@/lib/depositConstants";
+import { DEPOSIT_CHAIN_TO_NUMERIC } from "@/config";
 import { QRCodeSVG } from "qrcode.react";
 
 export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
@@ -23,14 +24,7 @@ export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
     // Load balance when chain changes (not token, since we fetch both USDC and USDT together)
     useEffect(() => {
         if (authenticated && selectedChain && profile?.virtualAddress) {
-            const chainIdMap: Record<string, string> = {
-                'ethereum': '11155111',
-                'base': '84532',
-                'polygon-amoy': '80002',
-                'bnb': '97',
-                'solana-devnet': '101',
-            };
-            const numericChainId = chainIdMap[selectedChain] || '84532';
+            const numericChainId = DEPOSIT_CHAIN_TO_NUMERIC[selectedChain] || '84532';
             loadWalletBalance(profile.id, profile.virtualAddress, numericChainId);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -95,6 +89,17 @@ export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
     };
 
     const depositAddress = getDepositAddress();
+
+    // Get the current chain's balance for the selected token
+    const getCurrentChainBalance = () => {
+        if (!selectedChain || !selectedToken || !walletBalance?.chains) return 0;
+        const numericChainId = DEPOSIT_CHAIN_TO_NUMERIC[selectedChain] || '84532';
+        const chainBalance = walletBalance.chains[numericChainId];
+        if (!chainBalance) return 0;
+        return chainBalance[selectedToken] || 0;
+    };
+
+    const currentChainBalance = getCurrentChainBalance();
 
     const getChainIcon = (chainId: DepositChain) => {
         switch (chainId) {
@@ -194,7 +199,11 @@ export const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
                                 {step === "initial" ? "Deposit" : "Transfer Crypto"}
                             </h2>
                             <p className="text-sm text-muted-foreground mt-1">
-                                Available: ${selectedToken && walletBalance?.tokens[selectedToken] ? walletBalance.tokens[selectedToken].toFixed(2) : "0.00"} {selectedToken ? selectedToken.toUpperCase() : ""}
+                                {step === "initial" ? (
+                                    <>Available: ${walletBalance?.portfolio.toFixed(2) || "0.00"} Total</>
+                                ) : (
+                                    <>Available: ${currentChainBalance.toFixed(2)} {selectedToken ? selectedToken.toUpperCase() : ""}</>
+                                )}
                             </p>
                         </div>
                         <button

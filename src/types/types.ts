@@ -125,10 +125,22 @@ export interface UserStats {
     percentile: number
 }
 
+export interface ChainBalance {
+    usdc: number
+    usdt: number
+    eth?: number
+    sol?: number
+    native?: number // native chain token (ETH on Ethereum, MATIC on Polygon, etc.)
+}
+
 export interface WalletBalance {
-    portfolio: number // Total portfolio value
-    cash: number // Available cash/USDC balance
-    tokens: {
+    portfolio: number // Total portfolio value across all chains
+    cash: number // Available cash/USDC+USDT balance across all chains
+    chains: {
+        [chainId: string]: ChainBalance // e.g., '84532': { usdc: 10, usdt: 5 }
+    }
+    // Legacy tokens for backward compatibility
+    tokens?: {
         usdc: number
         usdt: number
         eth?: number
@@ -408,6 +420,34 @@ export interface UserStoreState {
     unlockAchievement: (achievementId: string) => void
     checkAchievements: () => void
 }
+
+// ============================================================================
+// BALANCE TYPES
+// ============================================================================
+
+export interface ChainBalance {
+    usdc: number;
+    usdt: number;
+    eth?: number;
+    sol?: number;
+    native?: number; // native chain token
+}
+
+export interface WalletBalanceData {
+    portfolio: number; // total across all chains
+    cash: number; // total USDC+USDT across all chains
+    chains: {
+        [chainId: string]: ChainBalance;
+    };
+    // Legacy for backward compatibility
+    tokens?: {
+        usdc: number;
+        usdt: number;
+        eth?: number;
+        sol?: number;
+    };
+}
+
 
 // ============================================================================
 // UTILITY TYPES

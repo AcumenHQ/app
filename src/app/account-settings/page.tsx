@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useUserStore } from "@/stores/userStore";
 import { usePrivy } from "@privy-io/react-auth";
 import { CopyAddress } from "@/components/CopyAddress";
+import { CHAIN_IDS, CHAIN_NAMES } from "@/config";
 import Link from "next/link";
 
 export default function AccountSettingsPage() {
@@ -24,12 +25,14 @@ export default function AccountSettingsPage() {
     }
   }, [authenticated, user?.id, profile, loadUserData]);
 
-  // Load wallet balance when profile is available
+  // Load wallet balance when profile is available (using generated deposit address)
   useEffect(() => {
     if (authenticated && profile?.virtualAddress) {
-      // Default to Base Sepolia testnet (chainId: 84532)
-      const chainId = '84532';
-      loadWalletBalance(profile.id, profile.virtualAddress, chainId);
+      // Load balances for all supported chains
+      const allChainIds = Object.values(CHAIN_IDS);
+      allChainIds.forEach(chainId => {
+        loadWalletBalance(profile.id, profile.virtualAddress, chainId);
+      });
     }
   }, [authenticated, profile?.virtualAddress, profile?.id, loadWalletBalance]);
 
@@ -208,45 +211,136 @@ export default function AccountSettingsPage() {
                     </div>
                   </div>
 
-                  {/* Token Balances */}
+                  {/* Token Balances by Chain */}
                   <div>
-                    <h3 className="font-medium mb-3">Token Balances</h3>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
-                            <span className="text-white font-bold text-xs">$</span>
-                          </div>
-                          <span className="font-medium">USDC</span>
-                        </div>
-                        <span className="font-semibold">
-                          {walletBalance?.tokens.usdc.toFixed(2) || "0.00"}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
-                            <span className="text-white font-bold text-xs">₮</span>
-                          </div>
-                          <span className="font-medium">USDT</span>
-                        </div>
-                        <span className="font-semibold">
-                          {walletBalance?.tokens.usdt.toFixed(2) || "0.00"}
-                        </span>
-                      </div>
-                      {walletBalance?.tokens.eth && walletBalance.tokens.eth > 0 && (
-                        <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
-                              <span className="text-white font-bold text-xs">Ξ</span>
+                    <h3 className="font-medium mb-3">Balances by Chain</h3>
+                    <div className="space-y-4">
+                      {/* Base Sepolia */}
+                      {walletBalance?.chains?.['84532'] && (
+                        <div className="border border-border rounded-lg overflow-hidden">
+                          <div className="bg-muted/50 px-4 py-2 flex items-center gap-2">
+                            <div className="w-5 h-5 rounded-full bg-blue-400 flex items-center justify-center">
+                              <span className="text-white font-bold text-xs">B</span>
                             </div>
-                            <span className="font-medium">ETH</span>
+                            <span className="font-semibold text-sm">Base Sepolia</span>
                           </div>
-                          <span className="font-semibold">
-                            {walletBalance.tokens.eth.toFixed(4)}
-                          </span>
+                          <div className="p-3 space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground">USDC</span>
+                              <span className="font-medium">{walletBalance.chains['84532']?.usdc?.toFixed(2) || '0.00'}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground">USDT</span>
+                              <span className="font-medium">{walletBalance.chains['84532']?.usdt?.toFixed(2) || '0.00'}</span>
+                            </div>
+                            {walletBalance.chains['84532']?.native && walletBalance.chains['84532'].native > 0 && (
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="text-muted-foreground">ETH</span>
+                                <span className="font-medium">{walletBalance.chains['84532'].native.toFixed(4)}</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
+
+                      {/* Polygon Amoy */}
+                      {walletBalance?.chains?.['80002'] && (
+                        <div className="border border-border rounded-lg overflow-hidden">
+                          <div className="bg-muted/50 px-4 py-2 flex items-center gap-2">
+                            <div className="w-5 h-5 rounded-full bg-purple-600 flex items-center justify-center">
+                              <span className="text-white font-bold text-xs">M</span>
+                            </div>
+                            <span className="font-semibold text-sm">Polygon Amoy</span>
+                          </div>
+                          <div className="p-3 space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground">USDC</span>
+                              <span className="font-medium">{walletBalance.chains['80002']?.usdc?.toFixed(2) || '0.00'}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground">USDT</span>
+                              <span className="font-medium">{walletBalance.chains['80002']?.usdt?.toFixed(2) || '0.00'}</span>
+                            </div>
+                            {walletBalance.chains['80002']?.native && walletBalance.chains['80002'].native > 0 && (
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="text-muted-foreground">MATIC</span>
+                                <span className="font-medium">{walletBalance.chains['80002'].native.toFixed(4)}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Ethereum Sepolia */}
+                      {walletBalance?.chains?.['11155111'] && (
+                        <div className="border border-border rounded-lg overflow-hidden">
+                          <div className="bg-muted/50 px-4 py-2 flex items-center gap-2">
+                            <svg viewBox="0 0 24 24" className="w-5 h-5 fill-blue-500">
+                              <path d="M12 0L5.91 12.147l6.09.353V24l-6.09-12.147L12 0z" />
+                              <path d="M12 0l6.09 12.147L12 12.5v11.5l6.09-12.147L12 0z" />
+                            </svg>
+                            <span className="font-semibold text-sm">Ethereum Sepolia</span>
+                          </div>
+                          <div className="p-3 space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground">USDC</span>
+                              <span className="font-medium">{walletBalance.chains['11155111']?.usdc?.toFixed(2) || '0.00'}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground">USDT</span>
+                              <span className="font-medium">{walletBalance.chains['11155111']?.usdt?.toFixed(2) || '0.00'}</span>
+                            </div>
+                            {walletBalance.chains['11155111']?.native && walletBalance.chains['11155111'].native > 0 && (
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="text-muted-foreground">ETH</span>
+                                <span className="font-medium">{walletBalance.chains['11155111'].native.toFixed(4)}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Total Token Balances */}
+                      <div className="pt-4 border-t border-border">
+                        <h4 className="font-medium mb-3 text-sm">Total Across All Chains</h4>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
+                                <span className="text-white font-bold text-xs">$</span>
+                              </div>
+                              <span className="font-medium">USDC</span>
+                            </div>
+                            <span className="font-semibold">
+                              {walletBalance?.tokens?.usdc.toFixed(2) || "0.00"}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
+                                <span className="text-white font-bold text-xs">₮</span>
+                              </div>
+                              <span className="font-medium">USDT</span>
+                            </div>
+                            <span className="font-semibold">
+                              {walletBalance?.tokens?.usdt.toFixed(2) || "0.00"}
+                            </span>
+                          </div>
+                          {walletBalance?.tokens?.eth && walletBalance.tokens.eth > 0 && (
+                            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
+                                  <span className="text-white font-bold text-xs">Ξ</span>
+                                </div>
+                                <span className="font-medium">ETH</span>
+                              </div>
+                              <span className="font-semibold">
+                                {walletBalance.tokens.eth.toFixed(4)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
 

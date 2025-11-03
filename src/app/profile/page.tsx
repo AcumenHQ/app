@@ -5,6 +5,7 @@ import { useUserStore } from "@/stores/userStore";
 import { usePrivy } from "@privy-io/react-auth";
 import { DepositModal } from "@/components/DepositModal";
 import { WithdrawModal } from "@/components/WithdrawModal";
+import { CHAIN_IDS } from "@/config";
 
 export default function ProfilePage() {
   const { authenticated, user } = usePrivy();
@@ -21,12 +22,14 @@ export default function ProfilePage() {
     }
   }, [authenticated, user?.id, profile, loadUserData]);
 
-  // Load wallet balance when profile is available
+  // Load wallet balance when profile is available (using generated deposit address)
   useEffect(() => {
     if (authenticated && profile?.virtualAddress) {
-      // Default to Base Sepolia testnet (chainId: 84532)
-      const chainId = '84532';
-      loadWalletBalance(profile.id, profile.virtualAddress, chainId);
+      // Load balances for all supported chains
+      const allChainIds = Object.values(CHAIN_IDS);
+      allChainIds.forEach(chainId => {
+        loadWalletBalance(profile.id, profile.virtualAddress, chainId);
+      });
     }
   }, [authenticated, profile?.virtualAddress, profile?.id, loadWalletBalance]);
 

@@ -6,7 +6,8 @@ import { useUserStore } from "@/stores/userStore";
 import type { WithdrawModalProps, DepositChain, DepositToken } from "@/types/types";
 import { DEPOSIT_CHAINS, DEPOSIT_TOKENS } from "@/lib/depositConstants";
 import { TransactionSuccessModal } from "@/components/TransactionSuccessModal";
-import { TOKEN_ADDRESSES, ERC20_TRANSFER_ABI, ERC20_BALANCE_ABI, getWebSocketRpcUrl } from "@/lib/chainConstants";
+import { TOKEN_ADDRESSES, ERC20_TRANSFER_ABI, ERC20_BALANCE_ABI, getWebSocketRpcUrl } from "@/config";
+import { DEPOSIT_CHAIN_TO_NUMERIC } from "@/config";
 import { ethers, WebSocketProvider } from 'ethers';
 
 export const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
@@ -27,21 +28,18 @@ export const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
     const [chainId, setChainId] = useState("");
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    // Load balance when chain changes (not token, since we fetch both USDC and USDT together)
+    // Get the actual embedded wallet address for withdrawals
+    const embeddedWallet = wallets.find(w => w.walletClientType === 'privy');
+    const actualWalletAddress = embeddedWallet?.address || user?.wallet?.address;
+
+    // Load balance when chain changes using the ACTUAL WALLET ADDRESS (embedded wallet where funds were deposited)
     useEffect(() => {
-        if (authenticated && selectedChain && profile?.virtualAddress) {
-            const chainIdMap: Record<string, string> = {
-                'ethereum': '11155111',
-                'base': '84532',
-                'polygon-amoy': '80002',
-                'bnb': '97',
-                'solana-devnet': '101',
-            };
-            const numericChainId = chainIdMap[selectedChain] || '84532';
-            loadWalletBalance(profile.id, profile.virtualAddress, numericChainId);
+        if (authenticated && selectedChain && actualWalletAddress) {
+            const numericChainId = DEPOSIT_CHAIN_TO_NUMERIC[selectedChain] || '84532';
+            loadWalletBalance(profile?.id || user?.id || '', actualWalletAddress, numericChainId);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [authenticated, selectedChain, profile?.virtualAddress, profile?.id]);
+    }, [authenticated, selectedChain, actualWalletAddress]);
 
     // Close dropdowns when clicking outside
     useEffect(() => {
@@ -110,24 +108,20 @@ export const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
         setIsWithdrawing(true);
         try {
             // Map selected chain to chain ID
-            const chainIdMap: Record<string, string> = {
-                'ethereum': '11155111',
-                'base': '84532',
-                'polygon-amoy': '80002',
-                'bnb': '97',
-            };
-            const numericChainId = chainIdMap[selectedChain] || '84532';
+            const numericChainId = DEPOSIT_CHAIN_TO_NUMERIC[selectedChain] || '84532';
 
-            // Find embedded wallet
-            const embeddedWallet = wallets.find(w => w.walletClientType === 'privy');
-            if (!embeddedWallet) {
+            // Find embedded wallet (should already be defined from component state)
+            const wallet = embeddedWallet || wallets.find(w => w.walletClientType === 'privy');
+            if (!wallet) {
                 throw new Error('No embedded wallet found');
             }
 
             // Switch to correct chain if needed
             const chainIdNumber = parseInt(numericChainId, 10);
             try {
-                await embeddedWallet.switchChain(chainIdNumber);
+                if (wallet && typeof wallet.switchChain === 'function') {
+                    await wallet.switchChain(chainIdNumber);
+                }
             } catch (switchError) {
                 console.warn('Chain switch error (may already be on correct chain):', switchError);
             }
@@ -163,7 +157,7 @@ export const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
                 data: data,
                 value: '0x0', // Token transfers don't send ETH, just call contract
             }, {
-                address: embeddedWallet.address,
+                address: wallet.address,
             });
 
             setTxHash(response.hash);
@@ -171,10 +165,10 @@ export const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
             setShowSuccessModal(true);
             setIsWithdrawing(false);
 
-            // Reload balance after a short delay
-            if (profile?.virtualAddress) {
+            // Reload balance after a short delay using actual wallet address
+            if (actualWalletAddress) {
                 setTimeout(() => {
-                    loadWalletBalance(profile.id, profile.virtualAddress, numericChainId);
+                    loadWalletBalance(profile?.id || user?.id || '', actualWalletAddress, numericChainId);
                 }, 3000);
             }
         } catch (error) {
@@ -243,7 +237,16 @@ export const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
         }
     };
 
-    const availableBalance = walletBalance?.tokens[selectedToken || "usdc"] || 0;
+    // Get the current chain's balance for the selected token
+    const getCurrentChainBalance = () => {
+        if (!selectedChain || !selectedToken || !walletBalance?.chains) return 0;
+        const numericChainId = DEPOSIT_CHAIN_TO_NUMERIC[selectedChain] || '84532';
+        const chainBalance = walletBalance.chains[numericChainId];
+        if (!chainBalance) return 0;
+        return chainBalance[selectedToken] || 0;
+    };
+
+    const availableBalance = getCurrentChainBalance();
     const maxAmount = availableBalance.toString();
 
     return (

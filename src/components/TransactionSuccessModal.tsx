@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getExplorerUrl, getChainName as getChainNameFromConstants } from "@/lib/chainConstants";
+import { getExplorerUrl, getChainName as getChainNameFromConstants } from "@/config";
 
 interface TransactionSuccessModalProps {
     isOpen: boolean;

@@ -1,6 +1,7 @@
 "use client";
 import { PrivyProvider } from "@privy-io/react-auth";
 import { useTheme } from "next-themes";
+
 export default function PrivyClientProvider({ children }: { children: React.ReactNode }) {
   const { resolvedTheme } = useTheme();
   return (

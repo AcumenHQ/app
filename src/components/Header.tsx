@@ -11,9 +11,11 @@ import Link from "next/link";
 import { usePrivy } from "@privy-io/react-auth";
 import { useUserStore } from "@/stores/userStore";
 import { DepositModal } from "@/components/DepositModal";
+import { CHAIN_IDS } from "@/config";
 
 export function Header() {
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [isScrollingUp, setIsScrollingUp] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
   const { resolvedTheme } = useTheme();
@@ -31,6 +33,15 @@ export function Header() {
   const { authenticated, user, login, logout, ready } = usePrivy();
   const { profile, walletBalance, loadUserData, loadWalletBalance } = useUserStore();
 
+  // Handle login and logout
+  const handleLogin = async () => {
+    await login();
+    
+  };
+  const handleLogout = async () => {
+    await logout();
+  };
+
   // Load user data when authenticated
   useEffect(() => {
     if (authenticated && user?.id && (!profile || profile.id !== user.id)) {
@@ -38,12 +49,14 @@ export function Header() {
     }
   }, [authenticated, user?.id, profile, loadUserData]);
 
-  // Load wallet balance when profile is available
+  // Load wallet balance when profile is available (using generated deposit address)
   useEffect(() => {
     if (authenticated && profile?.virtualAddress) {
-      // Default to Base Sepolia testnet (chainId: 84532)
-      const chainId = '84532';
-      loadWalletBalance(profile.id, profile.virtualAddress, chainId);
+      // Load balances for all supported chains
+      const allChainIds = Object.values(CHAIN_IDS);
+      allChainIds.forEach(chainId => {
+        loadWalletBalance(profile.id, profile.virtualAddress, chainId);
+      });
     }
   }, [authenticated, profile?.virtualAddress, profile?.id, loadWalletBalance]);
 
@@ -180,7 +193,10 @@ export function Header() {
             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between py-3 gap-3 lg:gap-4">
               {/* Left: Filters + Bookmarks */}
               <div className="flex items-center space-x-3 sm:space-x-6">
-                <button className="flex items-center space-x-2 sm:space-x-3 px-3 sm:px-4 py-2 rounded-lg hover:bg-muted transition-colors cursor-pointer">
+                <button
+                  onClick={() => setIsFilterModalOpen(true)}
+                  className="flex items-center space-x-2 sm:space-x-3 px-3 sm:px-4 py-2 rounded-lg hover:bg-muted transition-colors cursor-pointer"
+                >
                   <svg
                     className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground"
                     fill="none"

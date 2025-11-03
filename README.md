@@ -142,27 +142,39 @@ src/
 Create a `.env.local` file in the root directory:
 
 ```env
-# WalletConnect Project ID (get from https://cloud.walletconnect.com/)
-NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id_here
-
-# API endpoints (when backend is ready)
-NEXT_PUBLIC_API_URL=http://localhost:8000
-
-# Privy (replace with your real keys when enabled)
+# ============================================
+# REQUIRED - Authentication & Wallet
+# ============================================
 NEXT_PUBLIC_PRIVY_APP_ID=your_privy_app_id
 NEXT_PUBLIC_PRIVY_CLIENT_ID=your_privy_client_id
 PRIVY_APP_SECRET=your_privy_app_secret
 
-# Alchemy API Key for RPC endpoints (get from https://www.alchemy.com/)
+# ============================================
+# RECOMMENDED - Enhanced RPC Performance
+# ============================================
 NEXT_PUBLIC_ALCHEMY_API_KEY=your_alchemy_api_key
 
-# Each user gets a unique generated deposit address on first sign-in
+# ============================================
+# OPTIONAL - Server-Side Configuration
+# ============================================
 DEPOSIT_ADDRESS_STRATEGY=first_signin_unique
-
-# Supported multichain config (CAIP-2 chain ids) - now includes testnets
 SUPPORTED_CHAINS=eip155:1,eip155:84532,eip155:80002,eip155:137,eip155:97,solana:101
 SUPPORTED_ASSETS=usdc,usdt
+
+# ============================================
+# OPTIONAL - Chain Overrides (see src/config/index.ts for all available)
+# ============================================
+# Chain IDs, RPC URLs, Explorer URLs, and Token Addresses
+# can all be overridden via environment variables
+# Uncomment and set only if you need different values than defaults
 ```
+
+**Note:** See `src/config/index.ts` for all available environment variable overrides including:
+
+-  Chain IDs (NEXT*PUBLIC_CHAIN_ID*\*)
+-  RPC URLs (NEXT*PUBLIC_RPC*_, NEXT*PUBLIC_WS_RPC*_)
+-  Explorer URLs (NEXT*PUBLIC_EXPLORER*\*)
+-  Token Addresses (NEXT*PUBLIC_USDC_ADDRESS*_, NEXT*PUBLIC_USDT_ADDRESS*_)
 
 ## 🔧 Development
 
